@@ -23,15 +23,18 @@ $('#gwrap').innerHTML=gk.map(k=>`<button class="gitem" data-t="${k}">${G[k].h}<d
 $('#gpl').innerHTML=gk.map(k=>`<div class="gp"><b>${G[k].h}</b> (${G[k].en})<br>${G[k].p}<br>דוגמה: ${G[k].ex}</div>`).join('');
 
 /* ---------- navigation ---------- */
-function show(i,reveal){if(i<0||i>=slides.length)return;slides[cur].classList.remove('on');cur=i;slides[cur].classList.add('on');setAll(slides[cur],!!reveal);
+function show(i,reveal){if(i<0||i>=slides.length)return;slides[cur].classList.remove('on');cur=i;slides[cur].classList.add('on');setAll(slides[cur],!!reveal);if(reveal)$$('.sheet',slides[cur]).forEach(x=>x.__api&&x.__api.buildAll&&x.__api.buildAll());
  $('#cnt').textContent=(cur+1)+' / '+slides.length;$('#progi').style.width=((cur+1)/slides.length*100)+'%';
  try{history.replaceState(null,'','#'+slides[cur].id);}catch(e){}
  $$('.mcell').forEach((c,j)=>c.classList.toggle('cur',j===cur));stepInfo();if(window.__fitSheets)window.__fitSheets(slides[cur]);}
 function go(id){const i=slides.findIndex(s=>s.id===id);if(i>=0){closeOverlays();show(i);}}
 function next(){/* a step by step demonstration that has started goes on with the same key, as on a classroom board */
  const sh=$$('.sheet',slides[cur]).map(x=>x.__api).find(a=>a&&a.stepActive&&a.stepActive());if(sh){sh.stepNext();return;}
+ /* the template of the first exercise is built click by click, before the slide's other reveals */
+ const bd=$$('.sheet',slides[cur]).map(x=>x.__api).find(a=>a&&a.buildPending&&a.buildPending());if(bd){bd.buildNext();return;}
  const p=pending(slides[cur]);if(p.length){p[0].forEach(e=>e.classList.add('show'));stepInfo();return;}show(cur+1);}
-function prev(){const s=shown(slides[cur]);if(s.length){s[s.length-1].forEach(e=>e.classList.remove('show'));stepInfo();return;}show(cur-1,true);}
+function prev(){const s=shown(slides[cur]);if(s.length){s[s.length-1].forEach(e=>e.classList.remove('show'));stepInfo();return;}
+ const bd=$$('.sheet',slides[cur]).map(x=>x.__api).find(a=>a&&a.built&&a.built()>0);if(bd){bd.buildBack();return;}show(cur-1,true);}
 $('#bNext').onclick=next;$('#bPrev').onclick=prev;
 $('#prog').onclick=e=>{const r=e.currentTarget.getBoundingClientRect();const f=(r.right-e.clientX)/r.width;show(Math.min(slides.length-1,Math.floor(f*slides.length)));};
 function closeOverlays(keepDrawer){$('#menu').classList.remove('open');$('#gloss').classList.remove('open');if(!keepDrawer)dr.classList.remove('open');}

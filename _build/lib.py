@@ -45,11 +45,24 @@ def M(s):
     return ''.join(out)
 
 
-NUM = re.compile(r'(?<![\w.,/])\d{1,3}(?:,\d{3})+(?:\.\d+)?%?|(?<![\w.,/])\d+(?:\.\d+)*%?')
+# a number, with its minus sign when it has one, so the minus stays on the left inside the LTR run
+NUM = re.compile(r'(?:(?<![^\s(>])[−-]|(?<![\w.,/]))(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?%?|\d+(?:\.\d+)*%?)')
 
 
 def _textnum(seg):
     return NUM.sub(lambda m: f'<span class="n">{m.group(0)}</span>', seg)
+
+
+_FXT = re.compile(r'(?<![\w¤$])=?[(¤A-Z0-9][¤A-Z0-9().,:*/^+\-−%]*[¤A-Z0-9)%]')
+
+
+def FXW(t):
+    """Wrap formula tokens inside Hebrew text in an isolated LTR span, so =¤D¤9*¤D¤10 keeps its order."""
+    def w(m):
+        x = m.group(0)
+        if not (x.startswith('=') and len(x) > 2 or re.search(r'[A-Z]{1,2}¤?\d', x) and re.search(r'[¤*^(/]', x)): return x
+        return f'<span class="xlf" dir="ltr">{x}</span>'
+    return ''.join(seg if seg.startswith('<') or seg.startswith('$') else _FXT.sub(w, seg) for seg in re.split(r'(<[^>]+>|\$[^$]+\$)', t))
 
 
 def TX(s):
@@ -61,6 +74,8 @@ def TX(s):
         if p.startswith('$') and p.endswith('$') and len(p) > 1:
             out.append(f'<span class="m" dir="ltr">{M(p[1:-1])}</span>')
         else:
+            # a formula inside Hebrew text (=PV(7%,6,5,100)) is isolated as LTR, so its = stays on the left
+            p = FXW(p)
             out.append(''.join(seg if seg.startswith('<') else _textnum(seg) for seg in re.split(r'(<[^>]+>)', p)))
     return ''.join(out)
 

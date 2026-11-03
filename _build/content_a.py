@@ -214,18 +214,6 @@ def _fmtx(v, f=''):
     return t.replace('-', '−')
 
 
-_FXT = re.compile(r'(?<![\w¤$])=?[(¤A-Z0-9][¤A-Z0-9().,:*/^+\-−%]*[¤A-Z0-9)%]')
-
-
-def FXW(t):
-    """Wrap formula tokens inside Hebrew text in an isolated LTR span, so =¤D¤9*¤D¤10 keeps its order."""
-    def w(m):
-        x = m.group(0)
-        if not (x.startswith('=') and len(x) > 2 or re.search(r'[A-Z]{1,2}¤?\d', x) and re.search(r'[¤*^(/]', x)): return x
-        return f'<span class="xlf" dir="ltr">{x}</span>'
-    return ''.join(seg if seg.startswith('<') or seg.startswith('$') else _FXT.sub(w, seg) for seg in re.split(r'(<[^>]+>|\$[^$]+\$)', t))
-
-
 _ARGN = {'PV': ['rate', 'nper', 'pmt', 'fv', 'type'], 'FV': ['rate', 'nper', 'pmt', 'pv', 'type'], 'PMT': ['rate', 'nper', 'pv', 'fv', 'type'],
          'NPER': ['rate', 'pmt', 'pv', 'fv', 'type'], 'RATE': ['nper', 'pmt', 'pv', 'fv', 'type'], 'NPV': ['rate']}
 
@@ -261,24 +249,39 @@ def _argnames(data, sol, head):
         if not lab: continue
         rowtxt = ' '.join(str(data[a]) for a in data if re.fullmatch(r'[A-Z]+' + str(row), a) and isinstance(data[a], str))
         a = lab[0]
+        # nper is the number of payments in the series, never 'years': the label says so
+        if nm == 'nper' and re.fullmatch(r'(מספר )?שנים|שנה', str(data[a]).strip()):
+            data[a] = 'מספר תשלומים'
         if re.search(r'\b' + nm + r'\b', rowtxt) or re.search(r'\b' + nm + r'\b', str(data[a])) or '(' in str(data[a]): continue
-        if re.search(r'[a-z]', rowtxt): continue   # the lesson file already names it in column C (rate_year, nper)
         data[a] = f'{data[a]} ({nm})'
+    # by role, on every sheet (Shay, 2026-11-03): the Excel name of each parameter beside its Hebrew label
+    labels = {a: v for a, v in data.items() if isinstance(v, str) and not v.startswith('=') and int(re.sub('[A-Z]', '', a)) not in head}
+    amort = any(re.search(r'יתר[הת]', str(v)) for v in data.values())
+    for a, v in labels.items():
+        t = v.strip()
+        if '(' in t: continue
+        if re.fullmatch(r'מספר תשלומים', t): data[a] = t + ' (nper)'
+        elif not amort and re.fullmatch(r'ערך נקוב', t): data[a] = t + ' (fv)'
+        elif not amort and re.fullmatch(r'קופון( שנתי| לחצי שנה| לרבעון| לתשלום)?', t): data[a] = t + ' (pmt)'
     return data
 
 
 def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None, remind=None, partial=None, chart=None, values=False, done='', extra='',
-            fmt=None, traps=None, allow=None, r0=1, maxh=None, tol=None, need=None, needMsg=None, xname=None, xtitle=None, steps=None, side=False, title='', signMsg=None, qtext=None):
+            fmt=None, traps=None, allow=None, r0=1, maxh=None, tol=None, need=None, needMsg=None, xname=None, xtitle=None, steps=None, side=False, title='', signMsg=None, qtext=None, build=None):
     """The live sheet itself. side=True: the sheet sits beside a question, and its feedback goes under the question (an element .xfb)."""
     fmt = fmt or {}
     # Shay, 2026-11-03: the sheet holds no number of the solution. Every number of the question (and every period number) is typed by the student,
     # and every given formula is written by the student. Only text labels stay as the structure of the table.
     def _raw(a, v):
         if isinstance(v, float) and re.fullmatch(r'pct\d', fmt.get(a, '') or ''):
-            return f'{round(v * 100, 8):g}%'
-        return f'{v:g}' if isinstance(v, float) else str(v)
+            return f'{round(v * 100, 10):.12g}%'
+        return f'{v:.15g}' if isinstance(v, float) else str(v)
     inputs = {a: _raw(a, v) for a, v in data.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
     given_f = {a: v for a, v in data.items() if isinstance(v, str) and v.startswith('=')}
+    for a, v in data.items():
+        if a in inputs:
+            r = inputs[a]; back = float(r[:-1]) / 100 if r.endswith('%') else float(r)
+            assert abs(back - v) <= 1e-12 * max(1, abs(v)), (sid, a, v, r)
     data = {a: v for a, v in data.items() if a not in inputs and a not in given_f}
     sol = {**inputs, **given_f, **sol}
     data = _argnames(dict(data), sol, head)
@@ -323,6 +326,13 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
     if tol is not None: cfgd['tol'] = tol
     if signMsg: cfgd['signMsg'] = TX(signMsg)
     if inputs: cfgd['vin'] = list(inputs)
+    if build:
+        # the label cells of each group are held back, and appear one group per click
+        bc = [a for cells, _ in build for a in cells]
+        assert all(a in data for a in bc), (sid, 'a build cell must be a label')
+        cfgd['bdata'] = {a: data[a] for a in bc}
+        cfgd['data'] = {k: v for k, v in cfgd['data'].items() if k not in bc}
+        cfgd['build'] = [dict(cells=cells, note=TX(FXW(note))) for cells, note in build]
     if need: cfgd['need'] = need; cfgd['needMsg'] = needMsg or ''
     if steps: cfgd['steps'] = [dict(cells=st['cells'], note=TX(FXW(st['note'])), **({'sel': st['sel']} if st.get('sel') else {}), **({'sel2': st['sel2']} if st.get('sel2') else {})) for st in steps]
     sv = ''

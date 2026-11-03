@@ -116,7 +116,7 @@ for s, ev in zip(XSPECS, EV):
             if rel > 1e-9: errs.append((n, a, who, x, lo))
 print('sheets', len(XSPECS), 'formulas', nform, 'largest relative gap (python, engine vs LibreOffice)', f'{worst:.1e}', 'errors', errs[:10])
 print('rtl', all(FM[sname(s)].sheet_view.rightToLeft for s in XSPECS), '| charts', sum(len(FM[sname(s)]._charts) for s in XSPECS))
-KEY = {'q-1': ('D23', 90.4669206805), 'q-2': ('D58', 78.3244608797), 'q-3': ('D82', 209.9721399946), 'q-4': ('D105', 413.0914195154), 'x-e1': ('B7', 259626.7326879), 'x-e7': ('B9', 6.3614868858)}
+KEY = {'q-1': ('D23', 90.4669206805), 'q-2': ('D58', 78.3244608797), 'q-3': ('D82', 209.9721399946), 'q-4': ('D105', 413.0914195154), 'x-e1': ('B7', 259626.7326879), 'x-e7': ('B11', 6.3614868858), 'x-e4': ('D12', 766.2097723135), 'm-8': ('D14', 640.5500538116), 'x-e6': ('D18', 758.1562732757), 'q-ex1': ('D23', 1090515.2931876)}
 for s in XSPECS:
     if s['sid'] in KEY:
         a, e = KEY[s['sid']]; v = V[sname(s)][a].value

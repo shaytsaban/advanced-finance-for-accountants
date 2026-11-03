@@ -18,7 +18,9 @@ function solveWidgets(s){
 function measure(s,i,tag){const foot=s.querySelector('.ft');const limit=foot?720-36:716;let worst=0,who='',wl=0,wr=1280;
  s.querySelectorAll('*').forEach(e=>{const xw=e.closest('.xl-wrap');if(xw&&xw!==e)return;if(e.closest('.ft')||e.closest('.pd-num')||e.closest('.orb')||e.closest('svg')&&e.tagName!=='svg')return;const c=getComputedStyle(e);if(c.display==='none'||c.visibility==='hidden')return;const r=rel(e);if(r.b-r.t<1)return;if(r.b>worst){worst=r.b;who=e.tagName+'.'+(e.className.baseVal??e.className);}if(r.l<wl)wl=r.l;if(r.r>wr)wr=r.r;});
  if(worst>limit+.5||wl<-.5||wr>1280.5)R.overflow.push({i:i+1,id:s.id,tag,bottom:Math.round(worst),limit,who,l:Math.round(wl),r:Math.round(wr)});}
-D.slides.forEach((s,i)=>{D.show(i);D.setAll(s,true);measure(s,i,'open');solveWidgets(s);measure(s,i,'solved');
+const loose=(root,id)=>{const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let t;while((t=w.nextNode())){const p=t.parentElement;if(!p||p.closest('svg,code,.xl-g,.xl-top,script,style'))continue;if(getComputedStyle(p).direction!=='rtl')continue;const v=t.nodeValue;if(/−/.test(v)||/(^|[\s(:])=[A-Za-z(¤$\d]/.test(v))R.loose.push({id,t:v.trim().slice(0,50)});}};
+R.loose=[];
+D.slides.forEach((s,i)=>{D.show(i);D.setAll(s,true);measure(s,i,'open');solveWidgets(s);measure(s,i,'solved');loose(s,s.id);
  s.querySelectorAll('.eq').forEach(e=>{const box=e.closest('.card,.solw,.cout,.fm,td,.slide');const g=document.createRange();g.selectNodeContents(e);const a=g.getBoundingClientRect(),b=box.getBoundingClientRect();if(a.left<b.left-1||a.right>b.right+1)R.eqwide.push({id:s.id,t:e.textContent.slice(0,50)});});
  const tw=document.createTreeWalker(s,NodeFilter.SHOW_TEXT);let n;const seen={};while((n=tw.nextNode())){if(!n.nodeValue.trim())continue;const p=n.parentElement;if(p.closest('.ft,sup,sub,tspan'))continue;let fs=parseFloat(getComputedStyle(p).fontSize);const svg=p.closest('svg');if(svg){const vb=svg.viewBox.baseVal.width;fs*=svg.getBoundingClientRect().width/(stage.getBoundingClientRect().width/1280)/vb;if(fs<13.5)seen['svg '+fs.toFixed(1)]=n.nodeValue.slice(0,24);}else if(fs<16.5)seen[fs]=n.nodeValue.slice(0,24);}
  if(Object.keys(seen).length)R.small.push({id:s.id,seen});
@@ -31,7 +33,7 @@ D.slides.forEach((s,i)=>{D.show(i);D.setAll(s,true);measure(s,i,'open');solveWid
 // bidi by measurement: inside an LTR run the first character must sit left of the last
 R.bidiM={checked:0,bad:[]};D.slides.forEach((s,i)=>{D.show(i);D.setAll(s,true);s.querySelectorAll('.eq,.m,.n').forEach(e=>{const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);const ts=[];let t;while(t=w.nextNode())if(t.nodeValue.trim())ts.push(t);if(!ts.length)return;const a=ts[0],b=ts[ts.length-1];const ia=a.nodeValue.search(/\S/),ib=b.nodeValue.length-1-b.nodeValue.split('').reverse().join('').search(/\S/);if(a===b&&ia>=ib)return;const r=document.createRange();r.setStart(a,ia);r.setEnd(a,ia+1);const x=r.getBoundingClientRect();r.setStart(b,ib);r.setEnd(b,ib+1);const y=r.getBoundingClientRect();if(x.width===0||y.width===0||e.closest('.frac')||e.querySelector('.frac')&&false)return;R.bidiM.checked++;if(x.left>y.left+0.5&&Math.abs(x.top-y.top)<4)R.bidiM.bad.push({id:s.id,t:e.textContent.slice(0,40)});});D.setAll(s,false);});
 // reveals
-D.slides.forEach((s,i)=>{const g=D.groups(s).length;D.show(i);let c=0;while(D.pending(s).length&&c<60){D.next();c++;}if(c!==g||D.cur()!==i)R.reveal.push({id:s.id,g,c});let b=0;while(D.groups(s).some(x=>x[0].classList.contains('show'))&&b<60){D.prev();b++;}if(b!==g||D.cur()!==i)R.reveal.push({id:s.id,back:b,g});});
+D.slides.forEach((s,i)=>{const nb=[...s.querySelectorAll('.sheet')].reduce((t,x)=>t+(x.__api&&x.__api.buildCount?x.__api.buildCount():0),0);[...s.querySelectorAll('.sheet')].forEach(x=>x.__api&&x.__api.built&&x.__api.built()&&0);const g=D.groups(s).length+nb;D.show(i);let c=0;while(D.pending(s).length&&c<60){D.next();c++;}if(c!==g||D.cur()!==i)R.reveal.push({id:s.id,g,c});let b=0;const anyBuilt=()=>[...s.querySelectorAll('.sheet')].some(x=>x.__api&&x.__api.built&&x.__api.built()>0);while((D.groups(s).some(x=>x[0].classList.contains('show'))||anyBuilt())&&b<60){D.prev();b++;}if(b!==g||D.cur()!==i)R.reveal.push({id:s.id,back:b,g});});
 D.show(0);let k=0;while(D.cur()<D.slides.length-1&&k<2000){D.next();k++;}R.walked=[k,D.cur()];
 // mc
 document.querySelectorAll('.mc').forEach(m=>{const a=+m.dataset.a,os=[...m.querySelectorAll('.o')],w=m.querySelector('.w');D.go(m.closest('.slide').id);const wrong=(a+1)%os.length;os[wrong].click();let ok=os[wrong].classList.contains('bad')&&os[a].classList.contains('ok')&&getComputedStyle(w).display!=='none';m.classList.remove('done');os.forEach(o=>o.classList.remove('ok','bad'));os[a].click();ok=ok&&os[a].classList.contains('ok')&&!os[wrong].classList.contains('bad');m.classList.remove('done');os.forEach(o=>o.classList.remove('ok','bad'));R.mc.push(ok?1:m.id);});
@@ -54,13 +56,14 @@ qq('.xlq').forEach(b=>{D.go(b.closest('.slide').id);const C=JSON.parse(b.dataset
  if(!C.values){C.targets.forEach(a=>api.put(a,'12345'));btn('check').click();ok=ok&&q('.xl-no',b)!==null&&/ערך ולא נוסחה|אינו תואם/.test(fb());measure(b.closest('.slide'),99,'xl-wrong');}
  else{C.targets.forEach(a=>api.put(a,'12345'));btn('check').click();ok=ok&&q('.xl-no',b)!==null;measure(b.closest('.slide'),99,'xl-wrong');}
  clear();
- if(C.hints){btn('hint').click();ok=ok&&!!q('.xl-tip',b);measure(b.closest('.slide'),99,'xl-hint');}
+ if(C.hints){C.hints.forEach(()=>{btn('hint').click();loose(q('.xl-fb',b),b.id+' hint');});ok=ok&&!!q('.xl-tip',b);measure(b.closest('.slide'),99,'xl-hint');}
+ if(C.remind){btn('remind').click();loose(q('.xl-fb',b),b.id+' remind');}
  if(C.remind){btn('remind').click();ok=ok&&!!q('.xl-tip',b);}
  btn('part').click();ok=ok&&C.partial.every(a=>api.raw(a)===C.solution[a]);clear();
  C.targets.forEach(a=>api.put(a,C.solution[a]));btn('check').click();ok=ok&&q('.xl-ok',b)!==null&&h.dataset.solved==='1';
  const errs=qq('td.e',b).length;ok=ok&&!errs;measure(b.closest('.slide'),99,'xl-solved');
  const svg=q('svg.xlc',b);if(svg)ok=ok&&svg.querySelectorAll('polyline').length>=1;
- btn('reset').click();btn('solve').click();ok=ok&&q('.xl-ok',b)!==null;measure(b.closest('.slide'),99,'xl-full');
+ btn('reset').click();btn('solve').click();ok=ok&&q('.xl-ok',b)!==null;measure(b.closest('.slide'),99,'xl-full');loose(q('.xl-fb',b),b.id+' done');
  // typing through the keyboard path, in the first target cell
  clear();const t=C.targets[0];api.select(t);const sink=q('.xl-sink',b);sink.focus();sink.dispatchEvent(new KeyboardEvent('keydown',{key:'=',bubbles:true}));const inp=q('.xl-in',b);if(inp){inp.value=C.solution[t];inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));ok=ok&&api.raw(t)===C.solution[t];}else ok=false;
  // every trap: all other cells solved, the trap formula in its cell, and the specific message must appear
@@ -73,11 +76,11 @@ qq('.xlq').forEach(b=>{D.go(b.closest('.slide').id);const C=JSON.parse(b.dataset
  let altOk=true;const alts=[];const seenC={};C.targets.filter(a=>{const c=a.replace(/\d+/,'');if(seenC[c]||!String(C.solution[a]).startsWith('='))return false;seenC[c]=1;return true;}).forEach(a=>{const f=C.solution[a];const L=['=('+f.slice(1)+')',f.replace(/\$/g,'')];const m=/^=-PV\(([^,]+),([^,]+),([^,]*),([^,)]+)\)$/.exec(f);if(m)L.push(`=PV(${m[1]},${m[2]},-(${m[3]}),-${m[4]})`);
   L.forEach(g=>{api.putMany({...C.solution,[a]:g});btn('check').click();if(!q('.xl-ok',b)){altOk=false;alts.push(a+' '+g+' => '+fb().slice(0,60));}});});ok=ok&&altOk;
  // step by step demo: every step writes its cells; at the end the sheet is the full solution and checks green; the deck's next key goes on with a started demo
- let stepOk=true;if(C.steps){clear();btn('step').click();for(let k=1;k<C.steps.length;k++){D.next();}stepOk=C.targets.every(a=>api.raw(a)===C.solution[a])&&/זה הפתרון המלא/.test(fb());measure(b.closest('.slide'),99,'xl-steps');btn('check').click();stepOk=stepOk&&!!q('.xl-ok',b);}
+ let stepOk=true;if(C.steps){clear();btn('step').click();loose(q('.xl-fb',b),b.id+' step 1');for(let k=1;k<C.steps.length;k++){D.next();loose(q('.xl-fb',b),b.id+' step '+(k+1));}stepOk=C.targets.every(a=>api.raw(a)===C.solution[a])&&/זה הפתרון המלא/.test(fb());measure(b.closest('.slide'),99,'xl-steps');btn('check').click();stepOk=stepOk&&!!q('.xl-ok',b);}
  ok=ok&&stepOk;
  // Excel feel: typing a formula colours its references; arrows point at a cell; F2 and double click open the cell for editing
  clear();let feel=true;const t0=C.targets[0],p0=XLA.parseAddr(t0);api.select(t0);const sk=q('.xl-sink',b);sk.focus();sk.dispatchEvent(new KeyboardEvent('keydown',{key:'=',bubbles:true}));
- let ci=q('.xl-in',b);const ref=Object.keys(C.data).find(a=>XLA.parseAddr(a).r>=(C.r0||1)-1);
+ let ci=q('.xl-in',b);const ref=Object.keys(C.data).find(a=>XLA.parseAddr(a).r>=(C.r0||1)-1)||C.targets.find(a=>a!==t0);
  if(ci&&ref){ci.value='='+ref;ci.dispatchEvent(new Event('input',{bubbles:true}));const el=q(`td[data-a="${ref}"]`,b);feel=feel&&el&&el.dataset.rf==='1'&&/inset/.test(el.style.boxShadow)&&q('.xl-ed .xl-ov span',b)!==null;
   ci.value='=';ci.dispatchEvent(new Event('input',{bubbles:true}));ci.setSelectionRange(1,1);ci.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));const up=XLA.addr(Math.max((C.r0||1)-1,p0.r-1),p0.c);feel=feel&&ci.value==='='+up;
   ci.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));}else feel=false;
@@ -86,6 +89,7 @@ qq('.xlq').forEach(b=>{D.go(b.closest('.slide').id);const C=JSON.parse(b.dataset
  ok=ok&&feel;
  clear();A(b.id,'xl',ok,{targets:C.targets.length,errs,traps:trapsOk+'/'+trapsN,tf:tf.slice(0,3),alts:alts.slice(0,3),signOk,stepOk,feel});});
 // no question without a sheet: every multiple choice question sits inside a question-and-sheet slide
+R.build=[];qq('.xlq').forEach(b=>{const C=JSON.parse(b.dataset.cfg);if(!C.build)return;const api=q('.sheet',b).__api;D.go(b.closest('.slide').id);api.buildBackAll&&api.buildBackAll();const empty=C.build.every(st=>st.cells.every(a=>!api.raw(a)));let ok=empty;C.build.forEach((st,k)=>{D.next();ok=ok&&st.cells.every(a=>api.raw(a)===C.bdata[a])&&/בניית התבנית/.test(q('.xl-fb',b).textContent);loose(q('.xl-fb',b),b.id+' build');measure(b.closest('.slide'),99,'build');});R.build.push({id:b.id,ok,n:C.build.length});});
 R.mcNoSheet=qq('.mc').filter(m=>!m.closest('.qx')).map(m=>m.id);
 // exercises with hints
 qq('.sv').forEach(b=>{D.go(b.closest('.slide').id);const ps=qq('.svp',b),fb=q('.fbbar',b);const fill=f=>ps.forEach(p=>{q('input',p).value=f(+p.dataset.a);});fill(a=>a+9);q('.chk',b).click();let ok=fb.classList.contains('wrong');q('.hnt',b).click();ok=ok&&/רמז/.test(fb.textContent);q('.rmd',b).click();ok=ok&&fb.textContent.length>5;q('.prt',b).click();ok=ok&&qq('.svs.on',b).length===1;q('.ful',b).click();ok=ok&&qq('.svs.on',b).length===qq('.svs',b).length;fill(a=>a);q('.chk',b).click();ok=ok&&fb.classList.contains('good');measure(b.closest('.slide'),99,'sv-full');q('.rst',b).click();ok=ok&&qq('.svs.on',b).length===0;A(b.id,'sv',ok);});
@@ -122,6 +126,8 @@ print('mc ok', len(R['mc']) - len(bad), 'bad', bad)
 print('activities', R['actN'], 'failed', [a for a in R['act'] if not a['ok']])
 print('traps', [(a['id'], a.get('traps')) for a in R['act'] if a['kind'] == 'xl'])
 print('toon overlaps', R['toon'])
+print('loose minus or formula in RTL text', len(R['loose']), R['loose'][:15])
 print('mc without a sheet', R['mcNoSheet'])
+print('template build', R['build'])
 print('counts', {k: sum(1 for a in R['act'] if a['kind'] == k) for k in {a['kind'] for a in R['act']}})
 print('terms', R['terms'], 'unused', R['unusedTerms'], 'bad go', R['go'])

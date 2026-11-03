@@ -64,6 +64,11 @@ page = f'''<!doctype html>
 <p class="meta">ד״ר שי צבאן · מרכזת הקורס: ד״ר גלי אינגבר</p>
 </div></header>
 <main class="wrap">
+<section class="live" id="live">
+<div class="ic">🎥</div>
+<div><h2>המפגשים החיים ב-Zoom</h2><p>כל המפגשים של הקורס מתקיימים בקישור הזה.</p></div>
+<a class="go" href="https://hdq-colman-ac.zoom.us/j/3160447945" target="_blank" rel="noopener">כניסה למפגש החי<small>Zoom</small></a>
+</section>
 <section class="contact" id="contact">
 <div class="ic">✉️</div>
 <div><h2>פניות לד״ר שי צבאן רק במייל: <a href="mailto:shay.tsaban@gmail.com">shay.tsaban@gmail.com</a></h2>
@@ -97,7 +102,7 @@ page = f'''<!doctype html>
 </div></div>
 </div>
 <div class="todo"><h4>📝 תרגול עצמי לשיעור {n(1)}</h4><ol>
-<li>במצגת: חלק 5, שבעה תרגילים ושאלות רב ברירה, כל אחת עם גיליון.</li>
+<li>במצגת: חלק 5, שישה תרגילים ושאלות רב ברירה, כל אחת עם גיליון.</li>
 <li>בקובץ התרגול ב-Excel: קודם פותרים, ורק אחר כך משווים לקובץ הפתרונות.</li>
 <li>קובץ התרגילים, פרק {n(1)}: תרגילים {n('1.1')} עד {n('1.11')}, {n('1.13')}, {n('1.17')} ו-{n('1.18')}, ותרגיל בסגנון בחינה {n(1)}, סעיפים א עד ג.</li>
 </ol></div>

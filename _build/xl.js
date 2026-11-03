@@ -133,8 +133,12 @@ function display(S,a){const v=S.val[a];if(v==null)return {t:'',n:false};if(isErr
 /* ---------- the widget ---------- */
 let CLIP=null;
 function mount(host,cfg){
- const R=cfg.rows,C=cfg.cols,R0=(cfg.r0||1)-1;const S=new Sheet(R,C);let base={...cfg.data};
- const load=()=>{S.raw={};S.fmt={...(cfg.fmt||{})};Object.entries(base).forEach(([a,v])=>S.set(a,v));S.recalc();};load();
+ const R=cfg.rows,C=cfg.cols,R0=(cfg.r0||1)-1;const S=new Sheet(R,C);
+ /* a template built click by click (the first exercise): the label cells of each group appear on the deck's next key */
+ const BL=cfg.build||[];let bk=0;
+ const baseNow=()=>{const d={...cfg.data};BL.slice(0,bk).forEach(st=>st.cells.forEach(a=>{d[a]=cfg.bdata[a];}));return d;};
+ let base=baseNow();
+ const load=()=>{base=baseNow();S.raw={};S.fmt={...(cfg.fmt||{})};Object.entries(base).forEach(([a,v])=>S.set(a,v));S.recalc();};load();
  const W=cfg.widths||[];
  host.classList.add('xl');
  host.innerHTML=`<div class="xl-top"><div class="xl-name" title="תיבת השם">A1</div><div class="xl-fx">fx</div><input class="xl-bar" dir="auto" spellcheck="false" autocomplete="off"></div>
@@ -297,8 +301,11 @@ function mount(host,cfg){
   if(x==='check')check(false);
   if(x==='step')stepNext();});
  /* step by step demonstration: each step writes its formulas into the sheet and explains them; the lecturer can go on with the deck's next key */
+ function buildTo(k,note){bk=Math.max(0,Math.min(BL.length,k));const keep={};Object.keys(S.raw).forEach(a=>{if(!(a in cfg.data)&&!(cfg.bdata&&a in cfg.bdata))keep[a]=S.raw[a];});load();Object.entries(keep).forEach(([a,v])=>S.set(a,v));
+  marks={};if(note&&bk>0)BL[bk-1].cells.forEach(a=>marks[a]='bld');render();
+  if(note&&bk>0)setFb(`<div class="xl-step"><b>בניית התבנית, שלב ${bk} מתוך ${BL.length}:</b> ${BL[bk-1].note}${bk===BL.length?' <b>התבנית מוכנה. עכשיו ממלאים.</b>':''}</div>`);else if(!note)setFb('');}
  let stepK=0;
- function stepNext(){if(!cfg.steps)return;if(stepK>=cfg.steps.length){stepK=0;load();}const st=cfg.steps[stepK];if(editing)cancel();
+ function stepNext(){if(!cfg.steps)return;if(bk<BL.length)buildTo(BL.length,false);if(stepK>=cfg.steps.length){stepK=0;load();}const st=cfg.steps[stepK];if(editing)cancel();
   Object.entries(st.cells).forEach(([a,f])=>S.set(a,f));marks={};Object.keys(st.cells).forEach(a=>marks[a]='stp');
   const ks=Object.keys(st.cells);sel=parseAddr(st.sel||ks[0]);sel2=parseAddr(st.sel2||st.sel||ks[0]);render();
   stepK++;const last=stepK===cfg.steps.length;
@@ -306,7 +313,7 @@ function mount(host,cfg){
   const b=host.querySelector('[data-x="step"]');if(b)b.textContent=last?'↺ מההתחלה':'▶ הצעד הבא';if(cfg.onChange)cfg.onChange();}
  /* checking: the value must match, the cell must hold a formula with references, and no number from the table may be typed in */
  const needOf=a=>cfg.need?(typeof cfg.need==='object'?cfg.need[a]:cfg.need):null;
- function check(silent){const sol=new Sheet(R,C);Object.entries(base).forEach(([a,v])=>sol.set(a,v));Object.entries(cfg.solution).forEach(([a,v])=>sol.set(a,v));sol.recalc();
+ function check(silent){const sol=new Sheet(R,C);Object.entries({...cfg.data,...(cfg.bdata||{})}).forEach(([a,v])=>sol.set(a,v));Object.entries(cfg.solution).forEach(([a,v])=>sol.set(a,v));sol.recalc();
   S.recalc();marks={};const notes=[];let ok=0;
   cfg.targets.forEach(a=>{const raw=S.raw[a]||'',want=sol.val[a],got=S.val[a];const sf=cfg.solution[a]||'';
    const lits=s=>(s.replace(/\$?[A-Za-z]{1,2}\$?\d+/g,' ').match(/\d+(\.\d+)?/g)||[]).map(Number);
@@ -325,14 +332,14 @@ function mount(host,cfg){
    else if(needOf(a)&&!new RegExp(needOf(a),'i').test(raw))why=(/^קבעו/.test(cfg.needMsg||'')?'קיבוע: ':'עבודה יעילה: ')+(cfg.needMsg||'יש פונקציה מתאימה לפעולה הזו');
    else if(typeof want==='number'&&!near(got,want)){why=cfg.wrongMsg||'התוצאה אינה נכונה. בדקו את סדר הפעולות ואת התאים שבחרתם';
     /* a known mistake gets its own explanation: the trap formula is evaluated on the solved sheet and compared with the student's value */
-    const tr=(cfg.traps&&cfg.traps[a])||[];for(const [f,m] of tr){const T=new Sheet(R,C);Object.entries(base).forEach(([k,v])=>T.set(k,v));Object.entries(cfg.solution).forEach(([k,v])=>T.set(k,v));T.set(a,f);T.recalc();if(near(got,T.val[a])){why=m;break;}}
+    const tr=(cfg.traps&&cfg.traps[a])||[];for(const [f,m] of tr){const T=new Sheet(R,C);Object.entries({...cfg.data,...(cfg.bdata||{})}).forEach(([k,v])=>T.set(k,v));Object.entries(cfg.solution).forEach(([k,v])=>T.set(k,v));T.set(a,f);T.recalc();if(near(got,T.val[a])){why=m;break;}}
     if(why===(cfg.wrongMsg||'התוצאה אינה נכונה. בדקו את סדר הפעולות ואת התאים שבחרתם')&&near(-got,want)&&want!==0)why=cfg.signMsg||'הסימן הפוך. פונקציות המימון באקסל מחזירות תשלום כמספר שלילי. הוסיפו מינוס לפני הפונקציה, או הפכו את סימן התזרים';}
    if(why){marks[a]='bad';notes.push(`<b>${a}:</b> ${why}`);}else{marks[a]='ok';ok++;}});
   render();const all=ok===cfg.targets.length;
   if(fb)setFb(all?`<div class="xl-ok">✔ כל ${ok} התאים נכונים${silent?' (פתרון לדוגמה)':''}.${cfg.done?' '+cfg.done:''}</div>`:`<div class="xl-no">נכונים ${ok} מתוך ${cfg.targets.length}.</div><div class="xl-notes">${notes.slice(0,2).join('<br>')}${notes.length>2?' ועוד '+(notes.length-2)+' תאים.':''}</div>`);
   if(all&&!silent)host.dataset.solved='1';if(cfg.onChange)cfg.onChange();}
  render();
- return {sheet:S,render,select:(a)=>{sel=parseAddr(a);sel2={...sel};render();},put:(a,v)=>{S.set(a,v);render();if(cfg.onChange)cfg.onChange();},stepNext:()=>stepNext(),stepActive:()=>!!cfg.steps&&stepK>0&&stepK<cfg.steps.length,stepCount:()=>stepK,putMany:o=>{Object.entries(o).forEach(([a,v])=>S.set(a,v));render();if(cfg.onChange)cfg.onChange();},get:a=>S.val[a],raw:a=>S.raw[a],check,reset:()=>host.querySelector('[data-x="reset"]').click(),showFormulas:v=>{if(showF!==!!v)toggleF();},
+ return {sheet:S,render,select:(a)=>{sel=parseAddr(a);sel2={...sel};render();},put:(a,v)=>{S.set(a,v);render();if(cfg.onChange)cfg.onChange();},stepNext:()=>stepNext(),buildPending:()=>bk<BL.length,buildNext:()=>buildTo(bk+1,true),buildBack:()=>buildTo(bk-1,true),buildAll:()=>{if(bk<BL.length)buildTo(BL.length,false);},buildBackAll:()=>buildTo(0,false),buildCount:()=>BL.length,built:()=>bk,stepActive:()=>!!cfg.steps&&stepK>0&&stepK<cfg.steps.length,stepCount:()=>stepK,putMany:o=>{Object.entries(o).forEach(([a,v])=>S.set(a,v));render();if(cfg.onChange)cfg.onChange();},get:a=>S.val[a],raw:a=>S.raw[a],check,reset:()=>host.querySelector('[data-x="reset"]').click(),showFormulas:v=>{if(showF!==!!v)toggleF();},
   fmtSel:fn=>{for(let r=Math.min(sel.r,sel2.r);r<=Math.max(sel.r,sel2.r);r++)for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++){const a=addr(r,c),f=fn(S.fmt[a]||'',S.val[a],display(S,a).t);if(f)S.fmt[a]=f;else delete S.fmt[a];}render();},
   fmtAt:a=>S.fmt[a]||'',active:()=>addr(sel.r,sel.c),onSel:fn=>{cfg.onSelect=fn;}};}
 const api={mount,shift,Sheet,addr,parseAddr,colName,tokenize,parse,FIN};if(typeof window!=='undefined')window.__XL=api;return api;
