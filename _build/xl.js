@@ -147,6 +147,7 @@ function mount(host,cfg){
  const focusG=()=>sink.focus({preventScroll:true});
  sink.addEventListener('input',()=>{const v=sink.value;sink.value='';if(!editing&&v)startEdit(v.trim()===''?'':v,false);});
  const td=a=>g.querySelector(`td[data-a="${a}"]`);
+ const setFb=h=>{if(!fb)return;fb.innerHTML=h;if(cfg.onFb)cfg.onFb();};
  let sel={r:R0,c:0},sel2={r:R0,c:0},editing=null,showF=false,marks={},hintN=0;
  const inSel=(r,c)=>r>=Math.min(sel.r,sel2.r)&&r<=Math.max(sel.r,sel2.r)&&c>=Math.min(sel.c,sel2.c)&&c<=Math.max(sel.c,sel2.c);
  const selName=()=>sel.r===sel2.r&&sel.c===sel2.c?addr(sel.r,sel.c):addr(Math.min(sel.r,sel2.r),Math.min(sel.c,sel2.c))+':'+addr(Math.max(sel.r,sel2.r),Math.max(sel.c,sel2.c));
@@ -200,7 +201,8 @@ function mount(host,cfg){
  function modeTip(){if(editing)toastX(editing.mode==='edit'?'מצב עריכה (F2): החצים מזיזים את הסמן':'מצב הזנה: אחרי אופרטור, החצים בוחרים תא');}
  function curInput(){return editing?(editing.where==='bar'?bar:td(editing.a).querySelector('input')):null;}
  function endEdit(){editing=null;barOv.innerHTML='';bar.classList.remove('xl-clr');g.querySelectorAll('td[data-rf]').forEach(el=>{el.style.boxShadow='';el.style.backgroundColor='';el.classList.remove('ptr');delete el.dataset.rf;});}
- function commit(dr,dc){if(!editing)return;const v=curInput().value.trim();S.set(editing.a,v);endEdit();move(dr,dc);render();focusG();if(cfg.onChange)cfg.onChange();}
+ function pctEntry(a,v){if(!/^pct/.test(S.fmt[a]||'')||!/^-?(\d+(\.\d*)?|\.\d+)$/.test(v))return v;const x=parseFloat(v);return Math.abs(x)>=1?v+'%':v;}
+ function commit(dr,dc){if(!editing)return;const v=pctEntry(editing.a,curInput().value.trim());S.set(editing.a,v);endEdit();move(dr,dc);render();focusG();if(cfg.onChange)cfg.onChange();}
  function cancel(){endEdit();render();focusG();}
  function move(dr,dc){sel={r:Math.max(R0,Math.min(R-1,sel.r+dr)),c:Math.max(0,Math.min(C-1,sel.c+dc))};sel2={...sel};}
  const NAV={ArrowDown:[1,0],ArrowUp:[-1,0],ArrowLeft:[0,1],ArrowRight:[0,-1]};
@@ -252,9 +254,13 @@ function mount(host,cfg){
  /* fill a selected block (one cell or several) down/up or sideways, repeating the block like Excel */
  function blk(){return{r0:Math.min(sel.r,sel2.r),r1:Math.max(sel.r,sel2.r),c0:Math.min(sel.c,sel2.c),c1:Math.max(sel.c,sel2.c)};}
  const md=(a,n)=>((a%n)+n)%n;
+ const plainNum=x=>x!=null&&x!==''&&String(x)[0]!=='='&&NUMRX.test(String(x));
  function fill(b,to){const h=b.r1-b.r0+1,w=b.c1-b.c0+1;
+  const series={};if(to.v&&h>1)for(let c=b.c0;c<=b.c1;c++){const vs=[];for(let r=b.r0;r<=b.r1;r++)vs.push(S.raw[addr(r,c)]);if(vs.every(plainNum)){const n=vs.map(x=>parseFloat(x));series[c]={a:n[0],st:(n[n.length-1]-n[0])/(n.length-1),pc:vs.every(x=>String(x).includes('%'))};}}
+  if(!to.v&&w>1)for(let r=b.r0;r<=b.r1;r++){const vs=[];for(let c=b.c0;c<=b.c1;c++)vs.push(S.raw[addr(r,c)]);if(vs.every(plainNum)){const n=vs.map(x=>parseFloat(x));series['r'+r]={a:n[0],st:(n[n.length-1]-n[0])/(n.length-1),pc:vs.every(x=>String(x).includes('%'))};}}
   for(let r=to.r0;r<=to.r1;r++)for(let c=to.c0;c<=to.c1;c++){if(r>=b.r0&&r<=b.r1&&c>=b.c0&&c<=b.c1)continue;
    const sr=to.v?b.r0+md(r-b.r0,h):r,sc=to.v?c:b.c0+md(c-b.c0,w);const src=addr(sr,sc),raw=S.raw[src],a=addr(r,c);
+   const se=to.v?series[c]:series['r'+r];if(se){const k=to.v?r-b.r0:c-b.c0;S.set(a,String(Math.round((se.a+se.st*k)*1e9)/1e9)+(se.pc?'%':''));if(S.fmt[src])S.fmt[a]=S.fmt[src];continue;}
    S.set(a,raw==null?'':shift(raw,r-sr,c-sc));if(S.fmt[src])S.fmt[a]=S.fmt[src];else delete S.fmt[a];}
   sel={r:to.r0,c:to.c0};sel2={r:to.r1,c:to.c1};render();toastX('הנוסחה שוכפלה, וההפניות התעדכנו בכל תא');if(cfg.onChange)cfg.onChange();}
  g.addEventListener('dblclick',e=>{/* pointer capture sends the event to the table: find the cell under the pointer */const tgt=document.elementFromPoint(e.clientX,e.clientY)||e.target;if(tgt.classList.contains('xl-fh')){const b=blk();
@@ -283,10 +289,10 @@ function mount(host,cfg){
  host.querySelector('.xl-tools').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const x=b.dataset.x;
   if(x==='pct'){for(let r=Math.min(sel.r,sel2.r);r<=Math.max(sel.r,sel2.r);r++)for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++){const a=addr(r,c);S.fmt[a]=/^pct/.test(S.fmt[a]||'')?'':'pct';}render();}
   if(x==='formulas')toggleF();
-  if(x==='hint'&&fb){const i=hintN%cfg.hints.length;hintN++;fb.innerHTML=`<div class="xl-tip"><b>רמז ${i+1} מתוך ${cfg.hints.length}:</b> ${cfg.hints[i]}</div>`;}
-  if(x==='remind'&&fb){fb.innerHTML=`<div class="xl-tip">${cfg.remind}</div>`;}
-  if(x==='part'){cfg.partial.forEach(a=>{S.set(a,cfg.solution[a]);});render();if(fb)fb.innerHTML='<div class="xl-tip">השורה הראשונה מולאה. המשיכו מכאן: גררו את ידית המילוי או כתבו לבד.</div>';if(cfg.onChange)cfg.onChange();}
-  if(x==='reset'){load();marks={};hintN=0;stepK=0;{const b=host.querySelector('[data-x="step"]');if(b)b.textContent='▶ צעד אחר צעד';}if(fb)fb.innerHTML='';sel={r:R0,c:0};sel2={...sel};render();if(cfg.onChange)cfg.onChange();}
+  if(x==='hint'&&fb){const i=hintN%cfg.hints.length;hintN++;setFb(`<div class="xl-tip"><b>רמז ${i+1} מתוך ${cfg.hints.length}:</b> ${cfg.hints[i]}</div>`);}
+  if(x==='remind'&&fb){setFb(`<div class="xl-tip">${cfg.remind}</div>`);}
+  if(x==='part'){cfg.partial.forEach(a=>{S.set(a,cfg.solution[a]);});render();if(fb)setFb('<div class="xl-tip">השורה הראשונה מולאה. המשיכו מכאן: גררו את ידית המילוי או כתבו לבד.</div>');if(cfg.onChange)cfg.onChange();}
+  if(x==='reset'){load();marks={};hintN=0;stepK=0;{const b=host.querySelector('[data-x="step"]');if(b)b.textContent='▶ צעד אחר צעד';}if(fb)setFb('');sel={r:R0,c:0};sel2={...sel};render();if(cfg.onChange)cfg.onChange();}
   if(x==='solve'){Object.entries(cfg.solution).forEach(([a,v])=>S.set(a,v));Object.assign(S.fmt,cfg.solFmt||{});render();check(true);if(cfg.onChange)cfg.onChange();}
   if(x==='check')check(false);
   if(x==='step')stepNext();});
@@ -296,7 +302,7 @@ function mount(host,cfg){
   Object.entries(st.cells).forEach(([a,f])=>S.set(a,f));marks={};Object.keys(st.cells).forEach(a=>marks[a]='stp');
   const ks=Object.keys(st.cells);sel=parseAddr(st.sel||ks[0]);sel2=parseAddr(st.sel2||st.sel||ks[0]);render();
   stepK++;const last=stepK===cfg.steps.length;
-  if(fb)fb.innerHTML=`<div class="xl-step"><b>צעד ${stepK} מתוך ${cfg.steps.length}:</b> ${st.note}${last?' <b>זה הפתרון המלא.</b>':''}</div>`;
+  if(fb)setFb(`<div class="xl-step"><b>צעד ${stepK} מתוך ${cfg.steps.length}:</b> ${st.note}${last?' <b>זה הפתרון המלא.</b>':''}</div>`);
   const b=host.querySelector('[data-x="step"]');if(b)b.textContent=last?'↺ מההתחלה':'▶ הצעד הבא';if(cfg.onChange)cfg.onChange();}
  /* checking: the value must match, the cell must hold a formula with references, and no number from the table may be typed in */
  const needOf=a=>cfg.need?(typeof cfg.need==='object'?cfg.need[a]:cfg.need):null;
@@ -306,6 +312,10 @@ function mount(host,cfg){
    const lits=s=>(s.replace(/\$?[A-Za-z]{1,2}\$?\d+/g,' ').match(/\d+(\.\d+)?/g)||[]).map(Number);
    const allowed=new Set([...lits(sf),...(cfg.allow||[0,1])]);let why='';
    const tol=w=>cfg.tol!=null?cfg.tol:Math.max(1e-6,1e-9*Math.abs(w));const near=(x,w)=>typeof x==='number'&&typeof w==='number'&&Math.abs(x-w)<=tol(w);
+   if(cfg.vin&&cfg.vin.includes(a)){const pc=/^pct/.test(cfg.fmt&&cfg.fmt[a]||'');let w='';
+    if(!raw)w='ריק: הזינו את הנתון מהשאלה';else if(isErr(got))w=`שגיאה ${got.err}`;
+    else if(!near(got,want))w=pc&&near(got/100,want)?'זה אחוז: כתבו אותו עם סימן האחוז, למשל 5%':pc&&near(got*100,want)?'האחוז קטן פי 100 מהנדרש. כתבו את האחוז כפי שהוא בשאלה, למשל 5%':'הערך אינו תואם את הנתון בשאלה. קראו שוב את השאלה';
+    if(w){marks[a]='bad';notes.push(`<b>${a}:</b> ${w}`);}else{marks[a]='ok';ok++;}return;}
    const nf=x=>String(x).toUpperCase().replace(/\s+/g,'').replace(/;/g,',');const exact=((cfg.traps&&cfg.traps[a])||[]).find(([f])=>nf(f)===nf(raw));
    if(exact&&!(typeof want==='number'&&near(got,want)))why=exact[1];
    else if(!raw)why='ריק';else if(raw[0]!=='='&&cfg.values){if(!near(got,want))why='המספר אינו נכון. חשבו שוב לפי ההסבר';}else if(raw[0]!=='=')why='הוקלד ערך ולא נוסחה. נוסחה מתחילה בסימן =';
@@ -319,7 +329,7 @@ function mount(host,cfg){
     if(why===(cfg.wrongMsg||'התוצאה אינה נכונה. בדקו את סדר הפעולות ואת התאים שבחרתם')&&near(-got,want)&&want!==0)why=cfg.signMsg||'הסימן הפוך. פונקציות המימון באקסל מחזירות תשלום כמספר שלילי. הוסיפו מינוס לפני הפונקציה, או הפכו את סימן התזרים';}
    if(why){marks[a]='bad';notes.push(`<b>${a}:</b> ${why}`);}else{marks[a]='ok';ok++;}});
   render();const all=ok===cfg.targets.length;
-  if(fb)fb.innerHTML=all?`<div class="xl-ok">✔ כל ${ok} התאים נכונים${silent?' (פתרון לדוגמה)':''}.${cfg.done?' '+cfg.done:''}</div>`:`<div class="xl-no">נכונים ${ok} מתוך ${cfg.targets.length}.</div><div class="xl-notes">${notes.slice(0,2).join('<br>')}${notes.length>2?' ועוד '+(notes.length-2)+' תאים.':''}</div>`;
+  if(fb)setFb(all?`<div class="xl-ok">✔ כל ${ok} התאים נכונים${silent?' (פתרון לדוגמה)':''}.${cfg.done?' '+cfg.done:''}</div>`:`<div class="xl-no">נכונים ${ok} מתוך ${cfg.targets.length}.</div><div class="xl-notes">${notes.slice(0,2).join('<br>')}${notes.length>2?' ועוד '+(notes.length-2)+' תאים.':''}</div>`);
   if(all&&!silent)host.dataset.solved='1';if(cfg.onChange)cfg.onChange();}
  render();
  return {sheet:S,render,select:(a)=>{sel=parseAddr(a);sel2={...sel};render();},put:(a,v)=>{S.set(a,v);render();if(cfg.onChange)cfg.onChange();},stepNext:()=>stepNext(),stepActive:()=>!!cfg.steps&&stepK>0&&stepK<cfg.steps.length,stepCount:()=>stepK,putMany:o=>{Object.entries(o).forEach(([a,v])=>S.set(a,v));render();if(cfg.onChange)cfg.onChange();},get:a=>S.val[a],raw:a=>S.raw[a],check,reset:()=>host.querySelector('[data-x="reset"]').click(),showFormulas:v=>{if(showF!==!!v)toggleF();},

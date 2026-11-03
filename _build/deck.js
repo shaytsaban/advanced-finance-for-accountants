@@ -26,11 +26,11 @@ $('#gpl').innerHTML=gk.map(k=>`<div class="gp"><b>${G[k].h}</b> (${G[k].en})<br>
 function show(i,reveal){if(i<0||i>=slides.length)return;slides[cur].classList.remove('on');cur=i;slides[cur].classList.add('on');setAll(slides[cur],!!reveal);
  $('#cnt').textContent=(cur+1)+' / '+slides.length;$('#progi').style.width=((cur+1)/slides.length*100)+'%';
  try{history.replaceState(null,'','#'+slides[cur].id);}catch(e){}
- $$('.mcell').forEach((c,j)=>c.classList.toggle('cur',j===cur));stepInfo();}
+ $$('.mcell').forEach((c,j)=>c.classList.toggle('cur',j===cur));stepInfo();if(window.__fitSheets)window.__fitSheets(slides[cur]);}
 function go(id){const i=slides.findIndex(s=>s.id===id);if(i>=0){closeOverlays();show(i);}}
-function next(){const p=pending(slides[cur]);if(p.length){p[0].forEach(e=>e.classList.add('show'));stepInfo();return;}
- /* a step by step demonstration that has started goes on with the same key, as on a classroom board */
- const sh=$$('.sheet',slides[cur]).map(x=>x.__api).find(a=>a&&a.stepActive&&a.stepActive());if(sh){sh.stepNext();return;}show(cur+1);}
+function next(){/* a step by step demonstration that has started goes on with the same key, as on a classroom board */
+ const sh=$$('.sheet',slides[cur]).map(x=>x.__api).find(a=>a&&a.stepActive&&a.stepActive());if(sh){sh.stepNext();return;}
+ const p=pending(slides[cur]);if(p.length){p[0].forEach(e=>e.classList.add('show'));stepInfo();return;}show(cur+1);}
 function prev(){const s=shown(slides[cur]);if(s.length){s[s.length-1].forEach(e=>e.classList.remove('show'));stepInfo();return;}show(cur-1,true);}
 $('#bNext').onclick=next;$('#bPrev').onclick=prev;
 $('#prog').onclick=e=>{const r=e.currentTarget.getBoundingClientRect();const f=(r.right-e.clientX)/r.width;show(Math.min(slides.length-1,Math.floor(f*slides.length)));};
@@ -48,7 +48,7 @@ document.addEventListener('keydown',e=>{if(typing(e)){if(e.key==='Escape')e.targ
  else if(e.key==='Escape'){closeOverlays();}
  else if(e.key==='Home'){show(0);}else if(e.key==='End'){show(slides.length-1);}});
 function fit(){const s=Math.min(innerWidth/1280,(innerHeight-44-14)/720);stage.style.setProperty('--sc',s);}
-addEventListener('resize',fit);fit();
+addEventListener('resize',()=>{fit();if(window.__fitSheets)window.__fitSheets(slides[cur]);});fit();
 document.addEventListener('click',e=>{const t=e.target.closest('[data-t]');if(t&&G[t.dataset.t]){e.stopPropagation();openTerm(t.dataset.t);return;}
  const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return;}
  if(!e.target.closest('#drawer'))dr.classList.remove('open');

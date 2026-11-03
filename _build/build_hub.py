@@ -83,20 +83,21 @@ page = f'''<!doctype html>
 <div class="lec-body">
 <div><h4>מה לומדים בשיעור</h4><ul class="learn">
 <li>אגרת חוב (אג״ח): ערך נקוב, ריבית נקובה, קופון ומועד פדיון</li>
-<li>שיעור תשואה לפדיון (YTM), היוון וערך נוכחי</li>
+<li>שיעור תשואה לפדיון (YTM), רציונל ותהליך התמחור</li>
 <li>שווי אג״ח בטבלת תזרימים ובפונקציות NPV ו-PV, ומוסכמת הסימן</li>
 <li>פרמיה, נכיון ופארי, וקופון חצי שנתי: המרת תשואה בחזקה</li>
 <li>אג״ח לשיעורין: לוח סילוקין וקופון על היתרה</li>
 </ul></div>
 <div><h4>חומרי השיעור</h4><div class="links">
 <a class="lk p" href="lectures/lecture-1/presentation.html"><span class="e">🖥️</span><span><b>מצגת השיעור</b><span class="d">{n(NS)} שקפים, {n(NX)} גיליונות Excel חיים בתוך השקפים ו-{n(NM)} שאלות רב ברירה, עם רמזים, משוב ופתרונות</span></span></a>
-<a class="lk s" href="lectures/lecture-1/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת: הגדרות, השאלות הפתורות, פתרונות הגיליונות ומילון מושגים</span></span></a>
-<a class="lk x" href="materials/practice-1.xlsx" download><span class="e">📊</span><span><b>קובץ תרגול (Excel)</b><span class="d">{n(NW)} גיליונות, אותם גיליונות כמו במצגת ובאותן כתובות תאים. ממלאים נוסחאות בתאים הצהובים</span></span></a>
+<a class="lk s" href="lectures/lecture-1/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת: הגדרות, כל השאלות עם פתרון בגיליון, ומילון מושגים</span></span></a>
+<a class="lk x" href="materials/practice-1.xlsx" download><span class="e">📊</span><span><b>קובץ תרגול (Excel)</b><span class="d">{n(NW)} גיליונות, כמו במצגת ובאותן כתובות תאים. מזינים נתונים ונוסחאות בתאים הצהובים</span></span></a>
+<a class="lk x" href="materials/lesson-1-appendix.xlsx" download><span class="e">📎</span><span><b>נספח Excel לשיעור</b><span class="d">כל שאלות השיעור בגיליון אחד, עם נוסח השאלה מעל כל טבלה. שני גיליונות: ללא פתרון ועם פתרון</span></span></a>
 <a class="lk r" href="materials/practice-1-solutions.xlsx" download><span class="e">✅</span><span><b>קובץ פתרונות (Excel)</b><span class="d">נוסחאות חיות ותרשים. פותחים רק אחרי שפותרים</span></span></a>
 </div></div>
 </div>
 <div class="todo"><h4>📝 תרגול עצמי לשיעור {n(1)}</h4><ol>
-<li>במצגת: חלק 5, שמונה גיליונות תרגול ושאלות רב ברירה.</li>
+<li>במצגת: חלק 5, שבעה תרגילים ושאלות רב ברירה, כל אחת עם גיליון.</li>
 <li>בקובץ התרגול ב-Excel: קודם פותרים, ורק אחר כך משווים לקובץ הפתרונות.</li>
 <li>קובץ התרגילים, פרק {n(1)}: תרגילים {n('1.1')} עד {n('1.11')}, {n('1.13')}, {n('1.17')} ו-{n('1.18')}, ותרגיל בסגנון בחינה {n(1)}, סעיפים א עד ג.</li>
 </ol></div>

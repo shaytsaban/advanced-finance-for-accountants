@@ -226,18 +226,74 @@ def FXW(t):
     return ''.join(seg if seg.startswith('<') or seg.startswith('$') else _FXT.sub(w, seg) for seg in re.split(r'(<[^>]+>|\$[^$]+\$)', t))
 
 
+_ARGN = {'PV': ['rate', 'nper', 'pmt', 'fv', 'type'], 'FV': ['rate', 'nper', 'pmt', 'pv', 'type'], 'PMT': ['rate', 'nper', 'pv', 'fv', 'type'],
+         'NPER': ['rate', 'pmt', 'pv', 'fv', 'type'], 'RATE': ['nper', 'pmt', 'pv', 'fv', 'type'], 'NPV': ['rate']}
+
+
+def _argnames(data, sol, head):
+    """Shay, 2026-11-03: beside the Hebrew label, the English name of the argument it feeds (rate, nper, pmt, pv, fv),
+    so the order of the arguments is visible where the student points. Read from the solution's function calls."""
+    names = {}
+    for f in sol.values():
+        if not str(f).startswith('='): continue
+        for m in re.finditer(r'\b(PV|FV|PMT|NPER|RATE|NPV)\(', f):
+            i, depth, args, cur = m.end(), 1, [], ''
+            while i < len(f) and depth:
+                ch = f[i]
+                if ch == '(': depth += 1
+                elif ch == ')':
+                    depth -= 1
+                    if not depth: break
+                if ch == ',' and depth == 1: args.append(cur); cur = ''
+                else: cur += ch
+                i += 1
+            args.append(cur)
+            for k, a in enumerate(args):
+                r = re.fullmatch(r'\$?([A-Z]+)\$?(\d+)', a.strip())
+                if r and k < len(_ARGN[m.group(1)]):
+                    names.setdefault(r.group(1) + r.group(2), _ARGN[m.group(1)][k])
+    for cell, nm in names.items():
+        col, row = re.match(r'([A-Z]+)(\d+)', cell).groups(); row = int(row)
+        # the label of the row (a text cell to its right in the sheet, so a lower column letter), or else the header of its column
+        lab = [a for a in data if re.fullmatch(r'[A-Z]+' + str(row), a) and isinstance(data[a], str) and not data[a].startswith('=') and a[0] < col]
+        if not lab:
+            lab = [a for a in data if a[0] == col and isinstance(data[a], str) and int(re.sub('[A-Z]', '', a)) < row and int(re.sub('[A-Z]', '', a)) in head]
+        if not lab: continue
+        rowtxt = ' '.join(str(data[a]) for a in data if re.fullmatch(r'[A-Z]+' + str(row), a) and isinstance(data[a], str))
+        a = lab[0]
+        if re.search(r'\b' + nm + r'\b', rowtxt) or re.search(r'\b' + nm + r'\b', str(data[a])) or '(' in str(data[a]): continue
+        if re.search(r'[a-z]', rowtxt): continue   # the lesson file already names it in column C (rate_year, nper)
+        data[a] = f'{data[a]} ({nm})'
+    return data
+
+
 def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None, remind=None, partial=None, chart=None, values=False, done='', extra='',
-            fmt=None, traps=None, allow=None, r0=1, maxh=None, tol=None, need=None, needMsg=None, xname=None, xtitle=None, steps=None, side=False, title='', signMsg=None):
+            fmt=None, traps=None, allow=None, r0=1, maxh=None, tol=None, need=None, needMsg=None, xname=None, xtitle=None, steps=None, side=False, title='', signMsg=None, qtext=None):
     """The live sheet itself. side=True: the sheet sits beside a question, and its feedback goes under the question (an element .xfb)."""
+    fmt = fmt or {}
+    # Shay, 2026-11-03: the sheet holds no number of the solution. Every number of the question (and every period number) is typed by the student,
+    # and every given formula is written by the student. Only text labels stay as the structure of the table.
+    def _raw(a, v):
+        if isinstance(v, float) and re.fullmatch(r'pct\d', fmt.get(a, '') or ''):
+            return f'{round(v * 100, 8):g}%'
+        return f'{v:g}' if isinstance(v, float) else str(v)
+    inputs = {a: _raw(a, v) for a, v in data.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
+    given_f = {a: v for a, v in data.items() if isinstance(v, str) and v.startswith('=')}
+    data = {a: v for a, v in data.items() if a not in inputs and a not in given_f}
+    sol = {**inputs, **given_f, **sol}
+    data = _argnames(dict(data), sol, head)
+    if steps:
+        steps = ([dict(cells=dict(inputs), note='מזינים את נתוני השאלה בתאים, כפי שהם כתובים בשאלה. אחוזים כותבים עם סימן האחוז.', sel=next(iter(inputs)))] if inputs else []) + \
+                ([dict(cells=dict(given_f), note='התאמות לתקופה: ' + ' '.join(f'{a}: {f}' for a, f in given_f.items()))] if given_f else []) + steps
+    partial = list(inputs) + list(given_f) + list(partial or [a for a in sol if a not in inputs and a not in given_f][:1])
     vals = xl_eval(data, sol)
     targets = list(sol)
-    fmt = fmt or {}
     rs = rows or max(int(re.sub('[A-Z]', '', a)) for a in list(data) + targets)
     cs = cols or max(ord(a[0]) - 64 for a in list(data) + targets)
     for st in steps or []:
         assert all(st['cells'][a] == sol[a] for a in st['cells']), (sid, 'a step must write the solution formula')
     if steps: assert set().union(*[set(st['cells']) for st in steps]) == set(sol), (sid, 'the steps must cover every target')
-    XSPECS.append(dict(sid=sid, name=xname or sid, title=xtitle or re.sub('<[^>]+>', '', title), task=re.sub('<[^>]+>', '', task).replace('¤', '$'), data=data, sol=sol, fmt=fmt, widths=widths, head=head, rows=rs, cols=cs, r0=r0, vals=vals, part=CUR[0]))
+    XSPECS.append(dict(qtext=qtext or task, vin=list(inputs), sid=sid, name=xname or sid, title=xtitle or re.sub('<[^>]+>', '', title), task=re.sub('<[^>]+>', '', task).replace('¤', '$'), data=data, sol=sol, fmt=fmt, widths=widths, head=head, rows=rs, cols=cs, r0=r0, vals=vals, part=CUR[0]))
     if MODE == 'pdf':
         L = [chr(65 + i) for i in range(cs)]
         t = ''
@@ -263,9 +319,10 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
     if traps: cfgd['traps'] = {a: [[f, TX(FXW(m))] for f, m in L] for a, L in traps.items()}
     if allow is not None: cfgd['allow'] = allow
     if r0 > 1: cfgd['r0'] = r0
-    if maxh: cfgd['maxh'] = maxh
+    cfgd['maxh'] = maxh or 2000   # the real height is fitted to the slide at runtime
     if tol is not None: cfgd['tol'] = tol
     if signMsg: cfgd['signMsg'] = TX(signMsg)
+    if inputs: cfgd['vin'] = list(inputs)
     if need: cfgd['need'] = need; cfgd['needMsg'] = needMsg or ''
     if steps: cfgd['steps'] = [dict(cells=st['cells'], note=TX(FXW(st['note'])), **({'sel': st['sel']} if st.get('sel') else {}), **({'sel2': st['sel2']} if st.get('sel2') else {})) for st in steps]
     sv = ''
@@ -286,26 +343,29 @@ def XLS(sid, title, h, task, data, sol, widths, head, **kw):
     S(sid, title, h, f'<div class="act xlq" id="{sid}-x" data-cfg="{_cfg(cfgd)}">{inner}</div>', kick=f'חלק {CUR[0]} · אקסל בתוך השקף')
 
 
-def QX(sid, tag, title, stem, task, data, sol, widths, head, note=None, **kw):
+def QX(sid, tag, title, stem, task, data, sol, widths, head, note=None, qmc='', **kw):
     """A question beside the live sheet in which it is solved. No algebra: the steps are formulas in the sheet."""
-    head_t = f'{tag}: {title}'
+    head_t = f'{tag}: {title}' if tag else title
     stem_html = ''.join(f'<p>{TX(x)}</p>' for x in stem)
-    notes = ''.join(BAND(a, t) for a, t in (note or []))
-    r = _xsheet(sid, task, data, sol, widths, head, side=True, title=head_t, **kw)
+    notes = ''.join(BAND(*x) if MODE == 'deck' else BAND(x[0], x[1]) for x in (note or []))   # (kind, text) or (kind, text, click): revealed beside the sheet
+    r = _xsheet(sid, task, data, sol, widths, head, side=True, title=head_t, qtext=' '.join(re.sub('<[^>]+>', '', x) for x in stem), **kw)
     if MODE == 'pdf':
-        S(sid, head_t, head_t, f'<div class="qstem">{stem_html}</div>{r}{notes}', kind='q'); return
+        S(sid, head_t, head_t, f'<div class="qstem">{stem_html}</div>{qmc}{r}{notes}', kind='q'); return
     cfgd, inner = r
-    S(sid, head_t, head_t, f'<div class="act xlq qx" id="{sid}-x" data-cfg="{_cfg(cfgd)}"><div class="qr"><div class="card qstem">{stem_html}</div>{notes}<div class="xfb"></div></div><div class="xw">{inner}</div></div>',
-      kick=f'חלק {CUR[0]} · {tag}', cls='qslide')
+    ch = cfgd.get('chart')
+    sv = f'<svg class="xlc" viewBox="0 0 {ch.get("W", 470)} {ch.get("H", 330)}" role="img" aria-label="תרשים"></svg>' if ch else ''
+    S(sid, head_t, head_t, f'<div class="act xlq qx" id="{sid}-x" data-cfg="{_cfg(cfgd)}"><div class="qr"><div class="card qstem">{stem_html}</div>{qmc}{sv}{notes}</div><div class="xw">{inner}<div class="xfb"></div></div></div>',
+      kick=f'חלק {CUR[0]} · {tag or "שאלה ואקסל"}', cls='qslide')
 
 
 def MCX(sid, title, h, item, task, data, sol, widths, head, **kw):
     """A multiple choice question with a live sheet beside it, where the answer is computed with the right formula."""
-    r = _xsheet(sid, task, data, sol, widths, head, side=True, title=h, **kw)
+    qt = re.sub('<[^>]+>', ' ', item.split('<div class="w">')[0]); qt = re.sub(r'\s+', ' ', qt).strip()
+    r = _xsheet(sid, task, data, sol, widths, head, side=True, title=h, qtext=qt + ' ' + re.sub('<[^>]+>', '', task), **kw)
     if MODE == 'pdf':
         S(sid, title, h, item + r); return
     cfgd, inner = r
-    S(sid, title, h, f'<div class="act xlq qx" id="{sid}-x" data-cfg="{_cfg(cfgd)}"><div class="qr">{item}<div class="xfb"></div></div><div class="xw">{inner}</div></div>', kick=f'חלק {CUR[0]} · שאלה ואקסל', cls='qslide')
+    S(sid, title, h, f'<div class="act xlq qx" id="{sid}-x" data-cfg="{_cfg(cfgd)}"><div class="qr">{item}</div><div class="xw">{inner}<div class="xfb"></div></div></div>', kick=f'חלק {CUR[0]} · שאלה ואקסל', cls='qslide')
 
 
 def _repr_targets(sol):

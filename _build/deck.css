@@ -347,3 +347,9 @@ code.xl{direction:ltr;unicode-bidi:isolate;display:inline-block;font:700 20px 'M
 .qx .xfb .xl-fb{margin-top:8px}
 .tasktxt.sm{font-size:17px;padding:6px 12px;margin-bottom:6px;line-height:1.3}
 .qx .mc{margin:0}
+.qx .qr svg.xlc{width:100%;height:auto;max-height:300px;display:block;background:#fff;border-radius:12px;margin:6px 0}
+.qx .xw .xfb .xl-fb{margin-top:6px;max-height:90px;overflow:auto}
+.qx .qr .card.qstem{font-size:18px;line-height:1.35;padding:10px 14px}
+.qx .qr .band{font-size:17px;padding:8px 12px;margin:8px 0 0}
+.qx .qr .mc .q{font-size:17px}.qx .qr .mc .o{font-size:17px;padding:5px 10px}
+.qx .qr svg.xlc{max-height:220px}

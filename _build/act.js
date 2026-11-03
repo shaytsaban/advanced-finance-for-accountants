@@ -12,7 +12,7 @@ function frame(c){const W=c.W||640,H=c.H||400,ml=Math.max(58,14+Math.max(...c.yt
  const tx=(x,y,t,o={})=>{const he=/[֐-׿]/.test(t);let a=o.a||'middle';if(he)a={start:'end',end:'start',middle:'middle'}[a];return `<text x="${x}" y="${y}" font-size="${o.fs||16}" text-anchor="${a}" fill="${o.fill||'#5d6a86'}" font-weight="${o.w||500}"${he?' direction="rtl"':''}>${t}</text>`;};
  let p=`<rect x="${ml}" y="${mt}" width="${W-ml-mr}" height="${H-mt-mb}" fill="#fff"/>`;
  c.yt.forEach(t=>{p+=`<line x1="${ml}" y1="${Y(t)}" x2="${W-mr}" y2="${Y(t)}" stroke="${t===0?'#1b2d55':'#e8e2d4'}" stroke-width="${t===0?2.2:1}"/>`+tx(ml-7,Y(t)+5,fg(t),{a:'end'});});
- c.xt.forEach(t=>{p+=`<line x1="${X(t)}" y1="${mt}" x2="${X(t)}" y2="${H-mb}" stroke="#f0ebe0"/>`+tx(X(t),H-mb+19,fg(t));});
+ const xlab=c.xpct?(t=>Math.round(t*1000)/10+'%'):fg;c.xt.forEach(t=>{p+=`<line x1="${X(t)}" y1="${mt}" x2="${X(t)}" y2="${H-mb}" stroke="#f0ebe0"/>`+tx(X(t),H-mb+19,xlab(t));});
  if(c.xl)p+=tx((ml+W-mr)/2,H-5,c.xl,{w:700,fill:'#2a3858'});
  if(c.yl)p+=tx(8,mt-11,c.yl,{a:'start',w:700,fill:'#2a3858',fs:15});
  return {W,H,X,Y,tx,p,ml,mr,mt,mb,id:c.id};}
@@ -44,14 +44,16 @@ $$('.xlq').forEach(b=>{const cfg=cfg0(b),host=$('.sheet',b),svg=$('svg.xlc',b);l
   let x0=c.x0,x1=c.x1,y0=c.y0,y1=c.y1,xt=c.xt,yt=c.yt;
   if(nx.length>1){x0=Math.min(...nx);x1=Math.max(...nx);if(x0===x1){x0-=1;x1+=1;}const ux=[...new Set(nx)].sort((a,b)=>a-b);xt=ux.length<=7?ux:nice(x0,x1,5).filter(v=>v>=x0&&v<=x1);}
   if(ny.length){const lo=Math.min(0,...ny,c.y0),hi=Math.max(0,...ny,c.y1);yt=nice(lo,hi,5);y0=yt[0];y1=yt[yt.length-1];}
-  const f=frame({id:b.id,x0,x1,y0,y1,xt,yt,W:c.W||470,H:c.H||330,xl:c.xl,yl:c.yl});let p=f.p+clip(f);
+  const f=frame({id:b.id,x0,x1,y0,y1,xt,yt,W:c.W||470,H:c.H||330,xl:c.xl,yl:c.yl,xpct:c.xpct});let p=f.p+clip(f);
   const single=c.series.length===1;
   c.series.forEach((se,k)=>{const ys=ser[k];const pts=[];xs.forEach((x,i)=>{if(typeof x==='number'&&typeof ys[i]==='number')pts.push([x,ys[i]]);});pts.sort((a,b)=>a[0]-b[0]);
    if(pts.length>1)p+=line(f,pts,se.c,4);pts.forEach(([x,y])=>{p+=`<circle cx="${f.X(x)}" cy="${f.Y(y)}" r="5.5" fill="${se.c}"/>`;if(single&&pts.length<=7){const X=f.X(x),an=X>f.W-f.mr-40?'end':X<f.ml+40?'start':'middle';p+=f.tx(X+(an==='start'?6:an==='end'?-6:0),f.Y(y)+(y<0?22:-11),fg(y),{fill:se.c,w:800,fs:15,a:an});}});
    if(pts.length&&!single){const [x,y]=pts[pts.length-1];p+=f.tx(f.X(x)-8,f.Y(y)+(se.dy||-10),se.lab,{a:'end',fill:se.c,w:800,fs:17});}});
   if(single&&c.series[0].lab)p+=f.tx(f.W-f.mr-4,f.mt+16,c.series[0].lab,{a:'end',fill:c.series[0].c,w:800,fs:16});
   svg.innerHTML=p;};
- cfg.onChange=draw;api=XL.mount(host,cfg);host.__api=api;const fbx=$('.xl-fb',host);if(fbx)($('.xfb',b)||$('.xlside',b)).appendChild(fbx);draw();});
+ cfg.onChange=draw;cfg.onFb=()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);};api=XL.mount(host,cfg);host.__api=api;const fbx=$('.xl-fb',host);if(fbx)($('.xfb',b)||$('.xlside',b)).appendChild(fbx);draw();
+ /* when feedback appears under a sheet, the sheet gives it room on the slide */
+ if(fbx&&$('.xfb',b)){let t=null;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);},0);}).observe(fbx,{childList:true,subtree:true,characterData:true});}});
 
 /* ---------- worked exercise with hints, reminder, partial and full solution ---------- */
 $$('.sv').forEach(b=>{const parts=$$('.svp',b),fb=$('.fbbar',b),sol=$$('.svs',b);let h=0;const H=cfg0(b);
@@ -82,4 +84,13 @@ $$('.draw').forEach(b=>{const C=cfg(b),svg=$('svg',b),fb=$('.fbbar',b),tt=$('.ta
  $('.rst',b).addEventListener('click',()=>load(k));
  b.__set=a=>{v=a.slice();paint();};b.__task=()=>k;load(0);});
 
+
+/* ---------- each sheet uses the free height of its slide: the scroll area reaches the bottom of the slide ---------- */
+window.__fitSheets=function(slide){const st=document.getElementById('stage'),sr=st.getBoundingClientRect(),k=sr.width/1280||1,limit=(slide.querySelector('.ft')?720-40-6:706);
+ slide.querySelectorAll('.xl-wrap').forEach(w=>{
+  /* columns widen to the width of the sheet's area (the row-number column stays) */
+  const tb=w.querySelector('table'),ths=[...tb.tHead.rows[0].cells].slice(1);ths.forEach(th=>{if(!th.dataset.w0)th.dataset.w0=parseFloat(th.style.width)||92;th.style.width=th.dataset.w0+'px';});
+  const base=ths.reduce((t,th)=>t+ +th.dataset.w0,0),wroom=w.clientWidth-36-2;if(wroom>base+8){const f=Math.min(1.8,wroom/base);ths.forEach(th=>{th.style.width=Math.floor(th.dataset.w0*f)+'px';});}
+  w.style.maxHeight='none';const top=(w.getBoundingClientRect().top-sr.top)/k,need=w.scrollHeight;const xf=w.closest('.xw')&&w.closest('.xw').querySelector('.xfb'),fbr=xf?(xf.getBoundingClientRect().height/k+(xf.textContent.trim()?6:0)):0;const room=Math.floor(limit-top-fbr);
+  w.style.maxHeight=Math.max(150,Math.min(need,room))+'px';});};
 })();

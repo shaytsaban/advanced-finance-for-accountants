@@ -137,7 +137,7 @@ body += f'<section class="part"><h1>מילון מושגים</h1><div class="glc"
 body += f'<section class="part"><h1>במפגש הבא: {LMETA["next_h"]}</h1><p>' + TX(LMETA['next_t']) + '</p></section>'
 cover = (f'<div class="cover"><div class="c-top">{INST}</div><div class="c-title">{LMETA["h1"][0]} {LMETA["h1"][1]}</div>'
          f'<div class="c-sub">{COURSE}: סיכום מורחב של שיעור {LESSON}. {LMETA["cover"]}</div><div class="c-line"></div>'
-         '<div class="c-meta">' + TX((f'מפגש {LMETA["date"]}' if LMETA['date'] else f'מפגש {LESSON}') + ' · ' + SEM) + '<br>' + TX('כל הגדרות השיעור, הדוגמאות, פתרונות הפעילויות, השאלות הפתורות ומילון המושגים.') + '</div>'
+         '<div class="c-meta">' + TX((f'מפגש {LMETA["date"]}' if LMETA['date'] else f'מפגש {LESSON}') + ' · ' + SEM) + '<br>' + TX('כל הגדרות השיעור, הדוגמאות, פתרונות הפעילויות, השאלות עם הפתרון בגיליון ומילון המושגים.') + '</div>'
          '<div class="c-author"><div class="c-name">ד״ר שי צבאן</div><div class="c-mail" dir="ltr">shay.tsaban@gmail.com</div></div></div>')
 toc = '<div class="toc"><h1>תוכן העניינים</h1><ol>' + ''.join(f'<li>{parts[n][0]["h"]}</li>' for n in range(1, TOTAL_PARTS + 1)) + '</ol></div>'
 page = (f'<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>{COURSE} | שיעור {LESSON} | סיכום</title><style>{CSS}</style></head><body>{cover}{toc}{body}</body></html>').replace('¤', '$')

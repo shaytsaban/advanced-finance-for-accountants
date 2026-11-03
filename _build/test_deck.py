@@ -51,7 +51,7 @@ qq('.draw').forEach(b=>{D.go(b.closest('.slide').id);const C=JSON.parse(b.datase
 qq('.xlq').forEach(b=>{D.go(b.closest('.slide').id);const C=JSON.parse(b.dataset.cfg),h=q('.sheet',b),api=h.__api,fb=()=>q('.xl-fb',b).textContent;let ok=true;const btn=x=>q(`[data-x="${x}"]`,b);
  const clear=()=>btn('reset').click();clear();
  btn('check').click();ok=ok&&q('.xl-no',b)!==null;
- if(!C.values){C.targets.forEach(a=>api.put(a,'12345'));btn('check').click();ok=ok&&q('.xl-no',b)!==null&&/ערך ולא נוסחה/.test(fb());measure(b.closest('.slide'),99,'xl-wrong');}
+ if(!C.values){C.targets.forEach(a=>api.put(a,'12345'));btn('check').click();ok=ok&&q('.xl-no',b)!==null&&/ערך ולא נוסחה|אינו תואם/.test(fb());measure(b.closest('.slide'),99,'xl-wrong');}
  else{C.targets.forEach(a=>api.put(a,'12345'));btn('check').click();ok=ok&&q('.xl-no',b)!==null;measure(b.closest('.slide'),99,'xl-wrong');}
  clear();
  if(C.hints){btn('hint').click();ok=ok&&!!q('.xl-tip',b);measure(b.closest('.slide'),99,'xl-hint');}
@@ -70,7 +70,7 @@ qq('.xlq').forEach(b=>{D.go(b.closest('.slide').id);const C=JSON.parse(b.dataset
  // sign: a solution that starts with =-FN( must give the sign message without the minus
  let signOk=true;C.targets.forEach(a=>{const f=C.solution[a];if(/^=-[A-Z]+\(/.test(f)){api.putMany({...C.solution,[a]:'='+f.slice(2)});btn('check').click();if(!/הסימן הפוך|ההפניה|היוונתם|חילקתם|המינוס/.test(fb()))signOk=false;}});ok=ok&&signOk;
  // other correct spellings are accepted: brackets, relative instead of absolute references (one cell at a time), PV with negated arguments
- let altOk=true;const alts=[];const seenC={};C.targets.filter(a=>{const c=a.replace(/\d+/,'');if(seenC[c])return false;seenC[c]=1;return true;}).forEach(a=>{const f=C.solution[a];const L=['=('+f.slice(1)+')',f.replace(/\$/g,'')];const m=/^=-PV\(([^,]+),([^,]+),([^,]*),([^,)]+)\)$/.exec(f);if(m)L.push(`=PV(${m[1]},${m[2]},-(${m[3]}),-${m[4]})`);
+ let altOk=true;const alts=[];const seenC={};C.targets.filter(a=>{const c=a.replace(/\d+/,'');if(seenC[c]||!String(C.solution[a]).startsWith('='))return false;seenC[c]=1;return true;}).forEach(a=>{const f=C.solution[a];const L=['=('+f.slice(1)+')',f.replace(/\$/g,'')];const m=/^=-PV\(([^,]+),([^,]+),([^,]*),([^,)]+)\)$/.exec(f);if(m)L.push(`=PV(${m[1]},${m[2]},-(${m[3]}),-${m[4]})`);
   L.forEach(g=>{api.putMany({...C.solution,[a]:g});btn('check').click();if(!q('.xl-ok',b)){altOk=false;alts.push(a+' '+g+' => '+fb().slice(0,60));}});});ok=ok&&altOk;
  // step by step demo: every step writes its cells; at the end the sheet is the full solution and checks green; the deck's next key goes on with a started demo
  let stepOk=true;if(C.steps){clear();btn('step').click();for(let k=1;k<C.steps.length;k++){D.next();}stepOk=C.targets.every(a=>api.raw(a)===C.solution[a])&&/זה הפתרון המלא/.test(fb());measure(b.closest('.slide'),99,'xl-steps');btn('check').click();stepOk=stepOk&&!!q('.xl-ok',b);}

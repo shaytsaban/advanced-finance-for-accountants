@@ -48,7 +48,7 @@ def build(path, solved):
             tc, tr = chr(65 + s['cols'] + 1), 1
             ws.column_dimensions[tc].width = 70
         ws[f'{tc}{tr}'] = s['title']; ws[f'{tc}{tr}'].font = Font(name='Arial', size=14, bold=True, color=NAVY)
-        ws[f'{tc}{tr + 1}'] = s['task']; ws[f'{tc}{tr + 1}'].font = Font(name='Arial', size=11)
+        ws[f'{tc}{tr + 1}'] = s['qtext']; ws[f'{tc}{tr + 1}'].font = Font(name='Arial', size=11)
         if tc != 'A': ws[f'{tc}{tr + 1}'].alignment = Alignment(wrap_text=True, vertical='top', horizontal='right')
         for a, v in s['data'].items():
             c = ws[a]; r = int(re.sub('[A-Z]', '', a)); c.value = v; c.font = Font(name='Arial', size=12)
@@ -62,7 +62,10 @@ def build(path, solved):
         for a, f in s['sol'].items():
             c = ws[a]; c.fill = PatternFill('solid', fgColor=GRN if solved else YEL); c.border = BOX; c.alignment = Alignment(horizontal='center'); c.font = Font(name='Arial', size=12)
             c.number_format = xfmt(s['fmt'].get(a)) or '#,##0.00'
-            if solved: c.value = f
+            if solved:
+                if f.startswith('='): c.value = f
+                elif f.endswith('%'): c.value = float(f[:-1]) / 100
+                else: c.value = float(f) if re.fullmatch(r'-?\d+(\.\d+)?', f) else f
         if solved and s['sid'] == 'x-curve':
             ch = ScatterChart(); ch.style = 13; ch.title = 'מחיר האג״ח מול התשואה לפדיון'; ch.height = 9; ch.width = 15
             ch.x_axis.title = 'תשואה לפדיון (%)'; ch.y_axis.title = 'מחיר (ש״ח)'; ch.x_axis.delete = False; ch.y_axis.delete = False
@@ -105,7 +108,7 @@ for s, ev in zip(XSPECS, EV):
     for a in s['sol']:
         nform += 1
         lo, py, js = V[n][a].value, s['vals'][a], ev[a]
-        if not str(FM[n][a].value).startswith('='): errs.append((n, a, 'lost formula'))
+        if s['sol'][a].startswith('=') and not str(FM[n][a].value).startswith('='): errs.append((n, a, 'lost formula'))
         if not isinstance(lo, (int, float)) or isinstance(lo, bool): errs.append((n, a, 'LibreOffice', lo)); continue
         for who, x in (('python', py), ('engine', js)):
             if not isinstance(x, (int, float)): errs.append((n, a, who, x)); continue
