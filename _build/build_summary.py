@@ -105,6 +105,8 @@ code.xl{direction:ltr;unicode-bidi:isolate;display:inline-block;font-family:"Cou
 .toon{display:flex;align-items:center;gap:2mm;margin:1mm 0;break-inside:avoid}.toon svg{width:13mm;height:13mm;flex:none}.bub{font-weight:700;color:var(--navy);background:#f6f2ea;border-radius:2mm;padding:.8mm 2.4mm}
 .gv{display:block;font-weight:700}.gm{display:block;font-size:9.8pt;color:var(--mut)}.steptbl td,.steptbl th{text-align:center}.rl{display:block}.qg{display:grid;grid-template-columns:1fr 1fr;gap:3mm;align-items:start}.qr{min-width:0}.solw{min-width:0}.pay{width:100%}
 .glc{columns:2;column-gap:5mm}
+.xlf{direction:ltr;unicode-bidi:isolate;font-family:"Courier New",monospace;font-size:10pt;white-space:nowrap}
+.xsteps{margin:.6mm 0 1.6mm;padding-right:6mm;line-height:1.5}.xsteps li{margin-bottom:.6mm}
 table.xlp{width:auto;min-width:60%;font-size:10pt}.xlp td,.xlp th{text-align:center;padding:.5mm 2mm}.xlp td.rn,.xlp th.rn{background:#f3f3f3;color:#666;font-weight:400;width:7mm}
 .fml{margin:.6mm 0 1.6mm;line-height:1.7}.fx{display:inline-block;margin-left:3mm;white-space:nowrap}.fx b{color:#c4421f;margin-left:1mm}
 .dt .gv{display:inline}.dt .gm{display:block}.tot td{border-top:.5mm solid var(--navy);font-weight:700}
@@ -130,7 +132,7 @@ for n in range(1, TOTAL_PARTS + 1):
         inner += h + s['body']
     body += f'<section class="part"><h1><span class="sn">{n}</span>{op["h"]}</h1>{inner}</section>'
 used = set(re.findall(r'data-t="(\w+)"', ''.join(s['body'] for s in SL)))
-gl = ''.join(f'<div class="gl"><div class="th">{g["h"]}<small>{g["en"]}</small></div><p><b>בפשטות:</b> {TX(g["p"])}</p><p><b>בלשון מקצועית:</b> {TX(g["f"])}</p><p><b>דוגמה:</b> {TX(g["ex"])}</p><p><b>שימו לב:</b> {TX(g["tr"])}</p></div>' for k, g in G.items() if k in used)
+gl = ''.join(f'<div class="gl"><div class="th">{g["h"]}<small>{g["en"]}</small></div><p><b>בפשטות:</b> {TX(FXW(g["p"]))}</p><p><b>בלשון מקצועית:</b> {TX(FXW(g["f"]))}</p><p><b>דוגמה:</b> {TX(FXW(g["ex"]))}</p><p><b>שימו לב:</b> {TX(FXW(g["tr"]))}</p></div>' for k, g in G.items() if k in used)
 body += f'<section class="part"><h1>מילון מושגים</h1><div class="glc">{gl}</div></section>'
 body += f'<section class="part"><h1>במפגש הבא: {LMETA["next_h"]}</h1><p>' + TX(LMETA['next_t']) + '</p></section>'
 cover = (f'<div class="cover"><div class="c-top">{INST}</div><div class="c-title">{LMETA["h1"][0]} {LMETA["h1"][1]}</div>'

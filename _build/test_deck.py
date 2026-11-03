@@ -36,7 +36,7 @@ D.show(0);let k=0;while(D.cur()<D.slides.length-1&&k<2000){D.next();k++;}R.walke
 // mc
 document.querySelectorAll('.mc').forEach(m=>{const a=+m.dataset.a,os=[...m.querySelectorAll('.o')],w=m.querySelector('.w');D.go(m.closest('.slide').id);const wrong=(a+1)%os.length;os[wrong].click();let ok=os[wrong].classList.contains('bad')&&os[a].classList.contains('ok')&&getComputedStyle(w).display!=='none';m.classList.remove('done');os.forEach(o=>o.classList.remove('ok','bad'));os[a].click();ok=ok&&os[a].classList.contains('ok')&&!os[wrong].classList.contains('bad');m.classList.remove('done');os.forEach(o=>o.classList.remove('ok','bad'));R.mc.push(ok?1:m.id);});
 const A=(id,kind,ok,more)=>R.act.push({id,kind,ok:!!ok,...more});
-const q=(s,r=document)=>r.querySelector(s),qq=(s,r=document)=>[...r.querySelectorAll(s)];
+const q=(s,r=document)=>r.querySelector(s),qq=(s,r=document)=>[...r.querySelectorAll(s)];const XLA=window.__XL;
 // sorter
 qq('.sorter').forEach(b=>{D.go(b.closest('.slide').id);q('.rst',b).click();const rows=qq('.srow',b),fb=q('.fbbar',b);let ok=true;rows.forEach(r=>{const a=+r.dataset.a,so=qq('.so',r),w=(a+1)%so.length;so[w].click();ok=ok&&so[w].classList.contains('bad')&&fb.classList.contains('wrong')&&!r.classList.contains('solved');so[a].click();ok=ok&&r.classList.contains('solved')&&fb.classList.contains('good');});ok=ok&&q('.score',b).textContent===rows.length+' / '+rows.length;q('.rst',b).click();ok=ok&&q('.score',b).textContent==='0 / '+rows.length;A(b.id,'sorter',ok);});
 // numq
@@ -68,11 +68,25 @@ qq('.xlq').forEach(b=>{D.go(b.closest('.slide').id);const C=JSON.parse(b.dataset
  let trapsOk=0,trapsN=0;const tf=[];Object.entries(C.traps||{}).forEach(([a,L])=>L.forEach(([f,m])=>{trapsN++;api.putMany({...C.solution,[a]:f});btn('check').click();const t=fb();if(t.includes(strip(m).slice(0,25))&&q('.xl-no',b))trapsOk++;else tf.push(a+' '+f+' => '+t.slice(0,80));}));
  ok=ok&&trapsOk===trapsN;
  // sign: a solution that starts with =-FN( must give the sign message without the minus
- let signOk=true;C.targets.forEach(a=>{const f=C.solution[a];if(/^=-[A-Z]+\(/.test(f)){api.putMany({...C.solution,[a]:'='+f.slice(2)});btn('check').click();if(!/הסימן הפוך|ההפניה|היוונתם|חילקתם/.test(fb()))signOk=false;}});ok=ok&&signOk;
+ let signOk=true;C.targets.forEach(a=>{const f=C.solution[a];if(/^=-[A-Z]+\(/.test(f)){api.putMany({...C.solution,[a]:'='+f.slice(2)});btn('check').click();if(!/הסימן הפוך|ההפניה|היוונתם|חילקתם|המינוס/.test(fb()))signOk=false;}});ok=ok&&signOk;
  // other correct spellings are accepted: brackets, relative instead of absolute references (one cell at a time), PV with negated arguments
  let altOk=true;const alts=[];const seenC={};C.targets.filter(a=>{const c=a.replace(/\d+/,'');if(seenC[c])return false;seenC[c]=1;return true;}).forEach(a=>{const f=C.solution[a];const L=['=('+f.slice(1)+')',f.replace(/\$/g,'')];const m=/^=-PV\(([^,]+),([^,]+),([^,]*),([^,)]+)\)$/.exec(f);if(m)L.push(`=PV(${m[1]},${m[2]},-(${m[3]}),-${m[4]})`);
   L.forEach(g=>{api.putMany({...C.solution,[a]:g});btn('check').click();if(!q('.xl-ok',b)){altOk=false;alts.push(a+' '+g+' => '+fb().slice(0,60));}});});ok=ok&&altOk;
- clear();A(b.id,'xl',ok,{targets:C.targets.length,errs,traps:trapsOk+'/'+trapsN,tf:tf.slice(0,3),alts:alts.slice(0,3),signOk});});
+ // step by step demo: every step writes its cells; at the end the sheet is the full solution and checks green; the deck's next key goes on with a started demo
+ let stepOk=true;if(C.steps){clear();btn('step').click();for(let k=1;k<C.steps.length;k++){D.next();}stepOk=C.targets.every(a=>api.raw(a)===C.solution[a])&&/זה הפתרון המלא/.test(fb());measure(b.closest('.slide'),99,'xl-steps');btn('check').click();stepOk=stepOk&&!!q('.xl-ok',b);}
+ ok=ok&&stepOk;
+ // Excel feel: typing a formula colours its references; arrows point at a cell; F2 and double click open the cell for editing
+ clear();let feel=true;const t0=C.targets[0],p0=XLA.parseAddr(t0);api.select(t0);const sk=q('.xl-sink',b);sk.focus();sk.dispatchEvent(new KeyboardEvent('keydown',{key:'=',bubbles:true}));
+ let ci=q('.xl-in',b);const ref=Object.keys(C.data).find(a=>XLA.parseAddr(a).r>=(C.r0||1)-1);
+ if(ci&&ref){ci.value='='+ref;ci.dispatchEvent(new Event('input',{bubbles:true}));const el=q(`td[data-a="${ref}"]`,b);feel=feel&&el&&el.dataset.rf==='1'&&/inset/.test(el.style.boxShadow)&&q('.xl-ed .xl-ov span',b)!==null;
+  ci.value='=';ci.dispatchEvent(new Event('input',{bubbles:true}));ci.setSelectionRange(1,1);ci.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));const up=XLA.addr(Math.max((C.r0||1)-1,p0.r-1),p0.c);feel=feel&&ci.value==='='+up;
+  ci.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));}else feel=false;
+ api.put(t0,C.solution[t0]);api.select(t0);sk.focus();sk.dispatchEvent(new KeyboardEvent('keydown',{key:'F2',bubbles:true}));ci=q('.xl-in',b);feel=feel&&ci&&ci.value===C.solution[t0];if(ci)ci.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+ const tdc=q(`td[data-a="${t0}"]`,b);tdc.dispatchEvent(new MouseEvent('dblclick',{bubbles:true}));ci=q('.xl-in',b);feel=feel&&ci&&ci.value===C.solution[t0];if(ci)ci.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+ ok=ok&&feel;
+ clear();A(b.id,'xl',ok,{targets:C.targets.length,errs,traps:trapsOk+'/'+trapsN,tf:tf.slice(0,3),alts:alts.slice(0,3),signOk,stepOk,feel});});
+// no question without a sheet: every multiple choice question sits inside a question-and-sheet slide
+R.mcNoSheet=qq('.mc').filter(m=>!m.closest('.qx')).map(m=>m.id);
 // exercises with hints
 qq('.sv').forEach(b=>{D.go(b.closest('.slide').id);const ps=qq('.svp',b),fb=q('.fbbar',b);const fill=f=>ps.forEach(p=>{q('input',p).value=f(+p.dataset.a);});fill(a=>a+9);q('.chk',b).click();let ok=fb.classList.contains('wrong');q('.hnt',b).click();ok=ok&&/רמז/.test(fb.textContent);q('.rmd',b).click();ok=ok&&fb.textContent.length>5;q('.prt',b).click();ok=ok&&qq('.svs.on',b).length===1;q('.ful',b).click();ok=ok&&qq('.svs.on',b).length===qq('.svs',b).length;fill(a=>a);q('.chk',b).click();ok=ok&&fb.classList.contains('good');measure(b.closest('.slide'),99,'sv-full');q('.rst',b).click();ok=ok&&qq('.svs.on',b).length===0;A(b.id,'sv',ok);});
 // a cartoon must not sit on other content
@@ -108,5 +122,6 @@ print('mc ok', len(R['mc']) - len(bad), 'bad', bad)
 print('activities', R['actN'], 'failed', [a for a in R['act'] if not a['ok']])
 print('traps', [(a['id'], a.get('traps')) for a in R['act'] if a['kind'] == 'xl'])
 print('toon overlaps', R['toon'])
+print('mc without a sheet', R['mcNoSheet'])
 print('counts', {k: sum(1 for a in R['act'] if a['kind'] == k) for k in {a['kind'] for a in R['act']}})
 print('terms', R['terms'], 'unused', R['unusedTerms'], 'bad go', R['go'])

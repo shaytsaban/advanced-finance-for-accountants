@@ -47,7 +47,7 @@ slides_html = '\n'.join(render(s, TOTAL_PARTS) for s in SL)
 fonts = R('shell/fonts.css')
 base = R('shell/base.css')
 tail = R('shell/tail.html')
-gj = json.dumps({k: {f: (TX(v) if f != 'en' else v) for f, v in g.items()} for k, g in G.items()}, ensure_ascii=False)
+gj = json.dumps({k: {f: (TX(FXW(v)) if f != 'en' else v) for f, v in g.items()} for k, g in G.items()}, ensure_ascii=False)
 js = f'const COURSE={json.dumps(COURSE, ensure_ascii=False)};const LESSON={LESSON};\nconst G={gj};\n' + R('deck.js') + '\n' + R('xl.js') + '\n' + R('act.js')
 title = f'{COURSE} | שיעור {LESSON} | {LMETA["title"]}'
 html = (f'<!doctype html>\n<html lang="he" dir="rtl">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>{title}</title>\n<style>\n'

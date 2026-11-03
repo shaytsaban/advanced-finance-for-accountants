@@ -138,7 +138,7 @@ function mount(host,cfg){
  const W=cfg.widths||[];
  host.classList.add('xl');
  host.innerHTML=`<div class="xl-top"><div class="xl-name" title="תיבת השם">A1</div><div class="xl-fx">fx</div><input class="xl-bar" dir="auto" spellcheck="false" autocomplete="off"></div>
-  <div class="xl-tools">${cfg.tools===false?'':`<button data-x="formulas" title="הצגת נוסחאות">נוסחאות</button>`}${cfg.targets?`<button data-x="check" class="xl-go">✔ בדיקה</button>${cfg.hints?'<button data-x="hint">💡 רמז</button>':''}${cfg.remind?'<button data-x="remind">📐 תזכורת נוסחה</button>':''}${cfg.partial?'<button data-x="part">פתרון חלקי</button>':''}<button data-x="solve">פתרון מלא</button>`:''}<button data-x="reset">איפוס</button><span class="xl-msg"></span></div>
+  <div class="xl-tools">${cfg.tools===false?'':`<button data-x="formulas" title="הצגת נוסחאות">נוסחאות</button>`}${cfg.targets?`<button data-x="check" class="xl-go">✔ בדיקה</button>${cfg.steps?'<button data-x="step" class="xl-st">▶ צעד אחר צעד</button>':''}${cfg.hints?'<button data-x="hint">💡 רמז</button>':''}${cfg.remind?'<button data-x="remind">📐 תזכורת נוסחה</button>':''}${cfg.partial?'<button data-x="part">פתרון חלקי</button>':''}<button data-x="solve">פתרון מלא</button>`:''}<button data-x="reset">איפוס</button><span class="xl-msg"></span></div>
   <div class="xl-wrap"${cfg.maxh?` style="max-height:${cfg.maxh}px"`:''}><table class="xl-g" tabindex="0"><thead><tr><th class="xl-c0"></th>${Array.from({length:C},(_,c)=>`<th style="width:${W[c]||92}px">${colName(c)}</th>`).join('')}</tr></thead><tbody>${Array.from({length:R-R0},(_,k)=>k+R0).map(r=>`<tr><th class="xl-rn">${r+1}</th>${Array.from({length:C},(_,c)=>`<td data-a="${addr(r,c)}"></td>`).join('')}</tr>`).join('')}</tbody></table></div>
   ${cfg.targets?'<div class="xl-fb"></div>':''}`;
  const g=host.querySelector('.xl-g'),bar=host.querySelector('.xl-bar'),nameB=host.querySelector('.xl-name'),msg=host.querySelector('.xl-msg'),fb=host.querySelector('.xl-fb');
@@ -151,34 +151,81 @@ function mount(host,cfg){
  const inSel=(r,c)=>r>=Math.min(sel.r,sel2.r)&&r<=Math.max(sel.r,sel2.r)&&c>=Math.min(sel.c,sel2.c)&&c<=Math.max(sel.c,sel2.c);
  const selName=()=>sel.r===sel2.r&&sel.c===sel2.c?addr(sel.r,sel.c):addr(Math.min(sel.r,sel2.r),Math.min(sel.c,sel2.c))+':'+addr(Math.max(sel.r,sel2.r),Math.max(sel.c,sel2.c));
  function render(){S.recalc();
-  g.querySelectorAll('td').forEach(el=>{const a=el.dataset.a;if(editing&&editing.a===a)return;const p=parseAddr(a);
+  g.querySelectorAll('td').forEach(el=>{const a=el.dataset.a;if(editing&&editing.a===a)return;const p=parseAddr(a);if(el.dataset.rf){el.style.boxShadow='';el.style.backgroundColor='';delete el.dataset.rf;}
    const raw=S.raw[a];let d=display(S,a);if(showF&&raw&&raw[0]==='=')d={t:raw,n:false,f:true};
    el.className=(d.n?'n':'')+(d.f?' f':'')+(d.e?' e':'')+(inSel(p.r,p.c)?' sel':'')+(p.r===sel.r&&p.c===sel.c?' act':'')+(cfg.inputs&&cfg.inputs.includes(a)?' in':'')+(cfg.targets&&cfg.targets.includes(a)?' tg':'')+(marks[a]?' '+marks[a]:'')+(cfg.headRows&&cfg.headRows.includes(p.r+1)?' hd':'');
    /* freeze the table's header row in a scrolling sheet, like Freeze Panes */
    if(cfg.maxh&&cfg.headRows&&cfg.headRows.length&&p.r+1===cfg.headRows[0]){el.classList.add('frz');el.style.top=g.tHead.offsetHeight+'px';const rn=el.parentElement.firstElementChild;rn.classList.add('frz');rn.style.top=el.style.top;}
    el.innerHTML=(d.n||d.f?`<span dir="ltr">${esc(d.t)}</span>`:esc(d.t))+(p.r===Math.max(sel.r,sel2.r)&&p.c===Math.max(sel.c,sel2.c)&&!editing?'<i class="xl-fh"></i>':'');});
-  const ae=td(addr(sel.r,sel.c));if(ae&&cfg.maxh){const w=host.querySelector('.xl-wrap'),fr=g.querySelector('td.frz'),hb=g.tHead.offsetHeight+(fr&&ae.offsetTop>fr.offsetTop?fr.offsetHeight:0);if(ae.offsetTop<w.scrollTop+hb)w.scrollTop=ae.offsetTop-hb;else if(ae.offsetTop+ae.offsetHeight>w.scrollTop+w.clientHeight)w.scrollTop=ae.offsetTop+ae.offsetHeight-w.clientHeight;}
+  const ae=td(addr(sel.r,sel.c));if(ae&&cfg.maxh)keepVisible(ae);
+  g.querySelectorAll('th.hs').forEach(x=>x.classList.remove('hs'));const hr=g.tHead.rows[0].cells;for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++)hr[c+1].classList.add('hs');
+  g.querySelectorAll('tbody th.xl-rn').forEach(th=>{const r=+th.textContent-1;if(r>=Math.min(sel.r,sel2.r)&&r<=Math.max(sel.r,sel2.r))th.classList.add('hs');});
   nameB.textContent=selName();if(!editing||editing.where!=='bar')bar.value=S.raw[addr(sel.r,sel.c)]||'';
   if(cfg.onSelect)cfg.onSelect(selName());}
- function startEdit(initial,keep){const a=addr(sel.r,sel.c);sel2={...sel};editing={a,where:'cell',orig:S.raw[a]||''};const el=td(a);
-  el.className+=' ed';el.innerHTML=`<input class="xl-in" dir="auto" spellcheck="false" autocomplete="off">`;const inp=el.querySelector('input');inp.value=keep?(S.raw[a]||''):initial;bar.value=inp.value;
-  inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
-  inp.oninput=()=>{bar.value=inp.value;};inp.onkeydown=keyEdit;}
+ /* ---------- editing, as in Excel: Enter mode (typing) and Edit mode (F2 or double click); references are coloured while a formula is written ---------- */
+ const RC=['#1a73e8','#d93025','#8e24aa','#188038','#e37400','#00838f','#c2185b'];
+ const REFRX=/("[^"]*")|(\$?[A-Za-z]{1,2}\$?\d+(?::\$?[A-Za-z]{1,2}\$?\d+)?)(?![\d(A-Za-z])/g;
+ function refsOf(v){const out=[],col={};if(!v||v[0]!=='=')return out;let m;REFRX.lastIndex=0;
+  while((m=REFRX.exec(v))){if(m[1])continue;const t=m[2],k=t.replace(/\$/g,'').toUpperCase();if(m.index>0&&/[A-Za-z_]/.test(v[m.index-1]))continue;
+   if(!(k in col))col[k]=RC[Object.keys(col).length%RC.length];out.push({i:m.index,t,k,c:col[k]});}return out;}
+ const tint=c=>c+'1f';
+ function paintRefs(){g.querySelectorAll('td[data-rf]').forEach(el=>{el.style.boxShadow='';el.style.backgroundColor='';el.classList.remove('ptr');delete el.dataset.rf;});
+  const inp=curInput();if(!inp)return;const done={};
+  refsOf(inp.value).forEach(f=>{if(done[f.k])return;done[f.k]=1;const [a,b]=f.k.split(':'),A=parseAddr(a),B=parseAddr(b||a);if(!A||!B)return;
+   const r0=Math.min(A.r,B.r),r1=Math.max(A.r,B.r),c0=Math.min(A.c,B.c),c1=Math.max(A.c,B.c);
+   for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++){const el=td(addr(r,c));if(!el||(editing&&editing.a===addr(r,c)))continue;
+    /* the sheet runs right to left: the lowest column is on the right edge */
+    const sh=[];if(r===r0)sh.push(`inset 0 2px 0 ${f.c}`);if(r===r1)sh.push(`inset 0 -2px 0 ${f.c}`);if(c===c0)sh.push(`inset -2px 0 0 ${f.c}`);if(c===c1)sh.push(`inset 2px 0 0 ${f.c}`);
+    el.style.boxShadow=sh.join(',');el.style.backgroundColor=tint(f.c);el.dataset.rf='1';}
+   if(editing&&editing.ptr&&editing.ptr.start===f.i){const el=td(addr(r0,c0));if(el)el.classList.add('ptr');}});}
+ /* the coloured text: an overlay that shows the same characters as the input, which is drawn transparent */
+ function colourise(inp,ov){const v=inp.value,fs=refsOf(v);
+  if(!fs.length||inp.scrollWidth>inp.clientWidth+1){ov.innerHTML='';inp.classList.remove('xl-clr');return;}
+  let h='',k=0;fs.forEach(f=>{h+=esc(v.slice(k,f.i))+`<span style="color:${f.c}">${esc(f.t)}</span>`;k=f.i+f.t.length;});h+=esc(v.slice(k));
+  ov.innerHTML=h;ov.style.direction=getComputedStyle(inp).direction;inp.classList.add('xl-clr');}
+ const barOv=document.createElement('div');barOv.className='xl-ov xl-bov';bar.parentNode.insertBefore(barOv,bar);
+ function sync(){const inp=curInput();if(!inp)return;if(inp!==bar)bar.value=inp.value;else{const el=td(editing.a).querySelector('input');if(el)el.value=bar.value;}
+  const ci=td(editing.a).querySelector('input');if(ci){fitEditor(ci);colourise(ci,ci.previousSibling);}Object.assign(barOv.style,{left:bar.offsetLeft+'px',top:bar.offsetTop+'px',width:bar.offsetWidth+'px',height:bar.offsetHeight+'px'});colourise(bar,barOv);barOv.scrollLeft=bar.scrollLeft;paintRefs();}
+ const meas=document.createElement('canvas').getContext('2d');
+ function fitEditor(inp){meas.font=getComputedStyle(inp).font;const w=Math.ceil(meas.measureText(inp.value).width)+18;const box=inp.parentNode;box.style.width=Math.max(box.parentNode.clientWidth,w)+'px';}
+ /* scroll the sheet so the cell is below the frozen headers and above the bottom edge; positions are measured against the scroll area (the stage is scaled) */
+ function keepVisible(el){const w=host.querySelector('.xl-wrap'),wr=w.getBoundingClientRect(),k=wr.height/w.offsetHeight||1,r=el.getBoundingClientRect();
+  const fr=g.querySelector('td.frz'),hb=g.tHead.offsetHeight+(fr&&fr!==el&&!fr.parentElement.contains(el)?fr.offsetHeight:0);
+  const top=(r.top-wr.top)/k+w.scrollTop,bot=(r.bottom-wr.top)/k+w.scrollTop;
+  if(top<w.scrollTop+hb)w.scrollTop=Math.max(0,top-hb);else if(bot>w.scrollTop+w.clientHeight)w.scrollTop=bot-w.clientHeight;}
+ function startEdit(initial,keep,mode){const a=addr(sel.r,sel.c);sel2={...sel};editing={a,where:'cell',orig:S.raw[a]||'',mode:mode||(keep?'edit':'enter'),ptr:null};const el=td(a);
+  el.className+=' ed';el.innerHTML=`<div class="xl-ed"><div class="xl-ov" aria-hidden="true"></div><input class="xl-in" dir="auto" spellcheck="false" autocomplete="off"></div>`;const inp=el.querySelector('input');inp.value=keep?(S.raw[a]||''):initial;
+  inp.focus({preventScroll:true});inp.setSelectionRange(inp.value.length,inp.value.length);
+  inp.oninput=()=>{if(editing){editing.ptr=null;}sync();};inp.onkeydown=keyEdit;inp.onkeyup=inp.onclick=()=>sync();sync();modeTip();}
+ function modeTip(){if(editing)toastX(editing.mode==='edit'?'מצב עריכה (F2): החצים מזיזים את הסמן':'מצב הזנה: אחרי אופרטור, החצים בוחרים תא');}
  function curInput(){return editing?(editing.where==='bar'?bar:td(editing.a).querySelector('input')):null;}
- function commit(dr,dc){if(!editing)return;const v=curInput().value.trim();S.set(editing.a,v);editing=null;move(dr,dc);render();focusG();if(cfg.onChange)cfg.onChange();}
- function cancel(){editing=null;render();focusG();}
+ function endEdit(){editing=null;barOv.innerHTML='';bar.classList.remove('xl-clr');g.querySelectorAll('td[data-rf]').forEach(el=>{el.style.boxShadow='';el.style.backgroundColor='';el.classList.remove('ptr');delete el.dataset.rf;});}
+ function commit(dr,dc){if(!editing)return;const v=curInput().value.trim();S.set(editing.a,v);endEdit();move(dr,dc);render();focusG();if(cfg.onChange)cfg.onChange();}
+ function cancel(){endEdit();render();focusG();}
  function move(dr,dc){sel={r:Math.max(R0,Math.min(R-1,sel.r+dr)),c:Math.max(0,Math.min(C-1,sel.c+dc))};sel2={...sel};}
+ const NAV={ArrowDown:[1,0],ArrowUp:[-1,0],ArrowLeft:[0,1],ArrowRight:[0,-1]};
+ const refTxt=(A,B)=>!B||(A.r===B.r&&A.c===B.c)?addr(A.r,A.c):addr(Math.min(A.r,B.r),Math.min(A.c,B.c))+':'+addr(Math.max(A.r,B.r),Math.max(A.c,B.c));
+ /* point mode: put or replace the reference that the arrows, a click or a drag point at */
+ function pointTo(anchor,cur){const inp=curInput(),p=editing.ptr,t=refTxt(anchor,cur);let st;
+  if(p){st=p.start;inp.value=inp.value.slice(0,st)+t+inp.value.slice(st+p.len);}else{st=inp.selectionStart;inp.value=inp.value.slice(0,st)+t+inp.value.slice(inp.selectionEnd);}
+  editing.ptr={start:st,len:t.length,anchor,cur};inp.setSelectionRange(st+t.length,st+t.length);inp.focus({preventScroll:true});sync();}
  function keyEdit(e){e.stopPropagation();
-  if(e.key==='Enter'){e.preventDefault();commit(e.shiftKey?-1:1,0);}
-  else if(e.key==='Tab'){e.preventDefault();commit(0,e.shiftKey?-1:1);}
-  else if(e.key==='Escape'){e.preventDefault();cancel();}
-  else if(e.key==='F4'){e.preventDefault();const inp=e.target,v=inp.value,p=inp.selectionStart,rx=/\$?[A-Za-z]{1,2}\$?\d+/g;let m,hit=null;
+  if(e.key==='Enter'){e.preventDefault();commit(e.shiftKey?-1:1,0);return;}
+  if(e.key==='Tab'){e.preventDefault();commit(0,e.shiftKey?-1:1);return;}
+  if(e.key==='Escape'){e.preventDefault();cancel();return;}
+  if(e.key==='F2'){e.preventDefault();editing.mode=editing.mode==='edit'?'enter':'edit';editing.ptr=null;modeTip();return;}
+  if(NAV[e.key]&&editing.mode==='enter'){e.preventDefault();const d=NAV[e.key],p=editing.ptr;
+   const base=p?p.cur:parseAddr(editing.a),nx={r:Math.max(R0,Math.min(R-1,base.r+d[0])),c:Math.max(0,Math.min(C-1,base.c+d[1]))};
+   if(p){pointTo(e.shiftKey?p.anchor:nx,nx);return;}
+   if(pointable()){pointTo(nx,nx);return;}
+   commit(d[0],d[1]);return;}
+  if(e.key==='F4'){e.preventDefault();const inp=e.target,v=inp.value,p=inp.selectionStart,rx=/\$?[A-Za-z]{1,2}\$?\d+/g;let m,hit=null;
    while((m=rx.exec(v)))if(m.index<=p&&p<=m.index+m[0].length)hit=m;
    if(hit){const q=/^(\$?)([A-Za-z]{1,2})(\$?)(\d+)$/.exec(hit[0]),st=(q[1]?2:0)+(q[3]?1:0),nx={0:3,3:1,1:2,2:0}[st];
     const nr=(nx&2?'$':'')+q[2]+(nx&1?'$':'')+q[4];inp.value=v.slice(0,hit.index)+nr+v.slice(hit.index+hit[0].length);
-    const np=hit.index+nr.length;inp.setSelectionRange(np,np);inp.dispatchEvent(new Event('input',{bubbles:true}));}}}
- const pointable=()=>{const inp=curInput();if(!inp)return false;const v=inp.value.slice(0,inp.selectionStart).trimEnd();return v[0]==='='&&/[=+\-*/^(,:;]$/.test(v);};
- function insertRef(a){const inp=curInput();const s=inp.selectionStart;inp.value=inp.value.slice(0,s)+a+inp.value.slice(inp.selectionEnd);inp.setSelectionRange(s+a.length,s+a.length);bar.value=inp.value;inp.focus();toastX(`נוספה הפניה לתא ${a}`);}
+    const np=hit.index+nr.length;inp.setSelectionRange(np,np);if(editing.ptr&&editing.ptr.start===hit.index)editing.ptr.len=nr.length;sync();}}}
+ const pointable=()=>{const inp=curInput();if(!inp)return false;if(editing.ptr)return true;const v=inp.value.slice(0,inp.selectionStart).trimEnd();return v[0]==='='&&/[=+\-*/^(,:;<>&]$/.test(v);};
+ function insertRef(a){const p=parseAddr(a);pointTo(p,p);toastX(`נוספה הפניה לתא ${a}`);}
  function toastX(t){msg.textContent=t;clearTimeout(toastX.t);toastX.t=setTimeout(()=>{if(msg.textContent===t)msg.textContent='';},1800);}
  /* pointer: select, drag a range, insert a reference while writing a formula, or drag the fill handle */
  let drag=null;
@@ -186,11 +233,16 @@ function mount(host,cfg){
   if(e.target.classList.contains('xl-fh')){e.preventDefault();drag={k:'fill',b:blk(),to:null};try{g.setPointerCapture(e.pointerId);}catch(_){}return;}
   if(!cell)return;const p=parseAddr(cell.dataset.a);
   if(editing&&editing.a===cell.dataset.a)return;
-  if(editing&&pointable()){e.preventDefault();insertRef(cell.dataset.a);return;}
+  if(editing&&pointable()){e.preventDefault();insertRef(cell.dataset.a);drag={k:'ptr',a:p};try{g.setPointerCapture(e.pointerId);}catch(_){}return;}
   if(editing)commit(0,0);
   e.preventDefault();sel={...p};sel2={...p};drag={k:'sel'};try{g.setPointerCapture(e.pointerId);}catch(_){}render();focusG();});
- g.addEventListener('pointermove',e=>{if(!drag)return;const el=document.elementFromPoint(e.clientX,e.clientY);const cell=el&&el.closest&&el.closest('td');if(!cell||!g.contains(cell))return;const p=parseAddr(cell.dataset.a);
+ g.addEventListener('pointermove',e=>{if(!drag)return;
+  /* dragging past the top or bottom edge of a scrolling sheet scrolls it, as in Excel */
+  let y=e.clientY;const w=host.querySelector('.xl-wrap'),wr=w.getBoundingClientRect(),k=wr.height/w.offsetHeight||1,top=wr.top+(g.tHead.offsetHeight+((g.querySelector('td.frz')||{}).offsetHeight||0))*k;
+  if(w.scrollHeight>w.clientHeight){if(y>wr.bottom-6){w.scrollTop+=24;y=wr.bottom-8;}else if(y<top+4&&w.scrollTop>0){w.scrollTop-=24;y=top+6;}}
+  const el=document.elementFromPoint(e.clientX,y);const cell=el&&el.closest&&el.closest('td');if(!cell||!g.contains(cell))return;const p=parseAddr(cell.dataset.a);
   if(drag.k==='sel'){sel2=p;render();}
+  else if(drag.k==='ptr'){if(editing&&editing.ptr&&(p.r!==editing.ptr.cur.r||p.c!==editing.ptr.cur.c))pointTo(drag.a,p);}
   else{const b=drag.b;const dv=p.r>b.r1?p.r-b.r1:p.r<b.r0?b.r0-p.r:0,dh=p.c>b.c1?p.c-b.c1:p.c<b.c0?b.c0-p.c:0;
    const to=!dv&&!dh?null:dv>=dh?{r0:Math.min(b.r0,p.r),r1:Math.max(b.r1,p.r),c0:b.c0,c1:b.c1,v:1}:{r0:b.r0,r1:b.r1,c0:Math.min(b.c0,p.c),c1:Math.max(b.c1,p.c),v:0};drag.to=to;
    g.querySelectorAll('td.fillp').forEach(x=>x.classList.remove('fillp'));
@@ -205,10 +257,10 @@ function mount(host,cfg){
    const sr=to.v?b.r0+md(r-b.r0,h):r,sc=to.v?c:b.c0+md(c-b.c0,w);const src=addr(sr,sc),raw=S.raw[src],a=addr(r,c);
    S.set(a,raw==null?'':shift(raw,r-sr,c-sc));if(S.fmt[src])S.fmt[a]=S.fmt[src];else delete S.fmt[a];}
   sel={r:to.r0,c:to.c0};sel2={r:to.r1,c:to.c1};render();toastX('הנוסחה שוכפלה, וההפניות התעדכנו בכל תא');if(cfg.onChange)cfg.onChange();}
- g.addEventListener('dblclick',e=>{if(e.target.classList.contains('xl-fh')){const b=blk();
+ g.addEventListener('dblclick',e=>{/* pointer capture sends the event to the table: find the cell under the pointer */const tgt=document.elementFromPoint(e.clientX,e.clientY)||e.target;if(tgt.classList.contains('xl-fh')){const b=blk();
    let last=b.r1;for(let r=b.r1+1;r<R;r++){const nb=[b.c0-1,b.c1+1].some(c=>c>=0&&c<C&&S.raw[addr(r,c)]!=null);if(nb)last=r;else break;}
    if(last>b.r1)fill(b,{r0:b.r0,r1:last,c0:b.c0,c1:b.c1,v:1});return;}
-  const cell=e.target.closest('td');if(!cell)return;sel=parseAddr(cell.dataset.a);sel2={...sel};startEdit('',true);});
+  const cell=(tgt.closest&&tgt.closest('td'))||e.target.closest('td');if(!cell||!g.contains(cell))return;if(editing&&editing.a===cell.dataset.a)return;sel=parseAddr(cell.dataset.a);sel2={...sel};startEdit('',true,'edit');});
  const gKey=e=>{if(editing)return;const k=e.key;
   const mod=e.ctrlKey||e.metaKey;
   if(mod&&(k==='c'||k==='C'||k==='ג')){e.preventDefault();e.stopPropagation();CLIP={raw:S.raw[addr(sel.r,sel.c)],r:sel.r,c:sel.c,fmt:S.fmt[addr(sel.r,sel.c)]};toastX('הועתק. סמנו תא או טווח, והדביקו ב-Ctrl+V');return;}
@@ -218,12 +270,13 @@ function mount(host,cfg){
   if(mod&&(k==='`'||k===';')){e.preventDefault();e.stopPropagation();toggleF();return;}
   const nav={ArrowDown:[1,0],ArrowUp:[-1,0],ArrowLeft:[0,1],ArrowRight:[0,-1],Enter:[e.shiftKey?-1:1,0],Tab:[0,e.shiftKey?-1:1]};
   if(nav[k]){e.preventDefault();e.stopPropagation();if(e.shiftKey&&k.startsWith('Arrow')){sel2={r:Math.max(R0,Math.min(R-1,sel2.r+nav[k][0])),c:Math.max(0,Math.min(C-1,sel2.c+nav[k][1]))};}else move(...nav[k]);render();return;}
-  if(k==='F2'){e.preventDefault();e.stopPropagation();startEdit('',true);return;}
+  if(k==='F2'){e.preventDefault();e.stopPropagation();startEdit('',true,'edit');return;}
   if(k==='Delete'||k==='Backspace'){e.preventDefault();e.stopPropagation();for(let r=Math.min(sel.r,sel2.r);r<=Math.max(sel.r,sel2.r);r++)for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++)S.set(addr(r,c),'');render();if(cfg.onChange)cfg.onChange();return;}
   if(k===' '||k.length===1&&!mod){e.preventDefault();e.stopPropagation();startEdit(k===' '?'':k,false);return;}
   if(k==='Escape'||k==='PageDown'||k==='PageUp'||k==='Home'||k==='End')e.stopPropagation();};
  g.addEventListener('keydown',gKey);sink.addEventListener('keydown',gKey);
- bar.addEventListener('focus',()=>{if(!editing){editing={a:addr(sel.r,sel.c),where:'bar',orig:S.raw[addr(sel.r,sel.c)]||''};}});
+ bar.addEventListener('focus',()=>{if(!editing){editing={a:addr(sel.r,sel.c),where:'bar',orig:S.raw[addr(sel.r,sel.c)]||'',mode:'edit',ptr:null};}});
+ bar.addEventListener('input',()=>{if(editing){editing.ptr=null;sync();}});bar.addEventListener('scroll',()=>{barOv.scrollLeft=bar.scrollLeft;});
  bar.addEventListener('keydown',keyEdit);
  bar.addEventListener('blur',()=>{if(editing&&editing.where==='bar')setTimeout(()=>{if(editing&&editing.where==='bar'&&document.activeElement!==bar)commit(0,0);},120);});
  function toggleF(){showF=!showF;host.querySelector('[data-x="formulas"]')&&host.querySelector('[data-x="formulas"]').classList.toggle('on',showF);render();}
@@ -233,9 +286,18 @@ function mount(host,cfg){
   if(x==='hint'&&fb){const i=hintN%cfg.hints.length;hintN++;fb.innerHTML=`<div class="xl-tip"><b>רמז ${i+1} מתוך ${cfg.hints.length}:</b> ${cfg.hints[i]}</div>`;}
   if(x==='remind'&&fb){fb.innerHTML=`<div class="xl-tip">${cfg.remind}</div>`;}
   if(x==='part'){cfg.partial.forEach(a=>{S.set(a,cfg.solution[a]);});render();if(fb)fb.innerHTML='<div class="xl-tip">השורה הראשונה מולאה. המשיכו מכאן: גררו את ידית המילוי או כתבו לבד.</div>';if(cfg.onChange)cfg.onChange();}
-  if(x==='reset'){load();marks={};hintN=0;if(fb)fb.innerHTML='';sel={r:R0,c:0};sel2={...sel};render();if(cfg.onChange)cfg.onChange();}
+  if(x==='reset'){load();marks={};hintN=0;stepK=0;{const b=host.querySelector('[data-x="step"]');if(b)b.textContent='▶ צעד אחר צעד';}if(fb)fb.innerHTML='';sel={r:R0,c:0};sel2={...sel};render();if(cfg.onChange)cfg.onChange();}
   if(x==='solve'){Object.entries(cfg.solution).forEach(([a,v])=>S.set(a,v));Object.assign(S.fmt,cfg.solFmt||{});render();check(true);if(cfg.onChange)cfg.onChange();}
-  if(x==='check')check(false);});
+  if(x==='check')check(false);
+  if(x==='step')stepNext();});
+ /* step by step demonstration: each step writes its formulas into the sheet and explains them; the lecturer can go on with the deck's next key */
+ let stepK=0;
+ function stepNext(){if(!cfg.steps)return;if(stepK>=cfg.steps.length){stepK=0;load();}const st=cfg.steps[stepK];if(editing)cancel();
+  Object.entries(st.cells).forEach(([a,f])=>S.set(a,f));marks={};Object.keys(st.cells).forEach(a=>marks[a]='stp');
+  const ks=Object.keys(st.cells);sel=parseAddr(st.sel||ks[0]);sel2=parseAddr(st.sel2||st.sel||ks[0]);render();
+  stepK++;const last=stepK===cfg.steps.length;
+  if(fb)fb.innerHTML=`<div class="xl-step"><b>צעד ${stepK} מתוך ${cfg.steps.length}:</b> ${st.note}${last?' <b>זה הפתרון המלא.</b>':''}</div>`;
+  const b=host.querySelector('[data-x="step"]');if(b)b.textContent=last?'↺ מההתחלה':'▶ הצעד הבא';if(cfg.onChange)cfg.onChange();}
  /* checking: the value must match, the cell must hold a formula with references, and no number from the table may be typed in */
  const needOf=a=>cfg.need?(typeof cfg.need==='object'?cfg.need[a]:cfg.need):null;
  function check(silent){const sol=new Sheet(R,C);Object.entries(base).forEach(([a,v])=>sol.set(a,v));Object.entries(cfg.solution).forEach(([a,v])=>sol.set(a,v));sol.recalc();
@@ -260,8 +322,8 @@ function mount(host,cfg){
   if(fb)fb.innerHTML=all?`<div class="xl-ok">✔ כל ${ok} התאים נכונים${silent?' (פתרון לדוגמה)':''}.${cfg.done?' '+cfg.done:''}</div>`:`<div class="xl-no">נכונים ${ok} מתוך ${cfg.targets.length}.</div><div class="xl-notes">${notes.slice(0,2).join('<br>')}${notes.length>2?' ועוד '+(notes.length-2)+' תאים.':''}</div>`;
   if(all&&!silent)host.dataset.solved='1';if(cfg.onChange)cfg.onChange();}
  render();
- return {sheet:S,render,select:(a)=>{sel=parseAddr(a);sel2={...sel};render();},put:(a,v)=>{S.set(a,v);render();if(cfg.onChange)cfg.onChange();},putMany:o=>{Object.entries(o).forEach(([a,v])=>S.set(a,v));render();if(cfg.onChange)cfg.onChange();},get:a=>S.val[a],raw:a=>S.raw[a],check,reset:()=>host.querySelector('[data-x="reset"]').click(),showFormulas:v=>{if(showF!==!!v)toggleF();},
+ return {sheet:S,render,select:(a)=>{sel=parseAddr(a);sel2={...sel};render();},put:(a,v)=>{S.set(a,v);render();if(cfg.onChange)cfg.onChange();},stepNext:()=>stepNext(),stepActive:()=>!!cfg.steps&&stepK>0&&stepK<cfg.steps.length,stepCount:()=>stepK,putMany:o=>{Object.entries(o).forEach(([a,v])=>S.set(a,v));render();if(cfg.onChange)cfg.onChange();},get:a=>S.val[a],raw:a=>S.raw[a],check,reset:()=>host.querySelector('[data-x="reset"]').click(),showFormulas:v=>{if(showF!==!!v)toggleF();},
   fmtSel:fn=>{for(let r=Math.min(sel.r,sel2.r);r<=Math.max(sel.r,sel2.r);r++)for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++){const a=addr(r,c),f=fn(S.fmt[a]||'',S.val[a],display(S,a).t);if(f)S.fmt[a]=f;else delete S.fmt[a];}render();},
   fmtAt:a=>S.fmt[a]||'',active:()=>addr(sel.r,sel.c),onSel:fn=>{cfg.onSelect=fn;}};}
-return {mount,shift,Sheet,addr,parseAddr,colName,tokenize,parse,FIN};
+const api={mount,shift,Sheet,addr,parseAddr,colName,tokenize,parse,FIN};if(typeof window!=='undefined')window.__XL=api;return api;
 })();

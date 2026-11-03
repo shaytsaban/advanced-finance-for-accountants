@@ -214,28 +214,30 @@ def _fmtx(v, f=''):
     return t.replace('-', '−')
 
 
-_FXT = re.compile(r'(?<![\w¤$])=?[(¤A-Z0-9][¤A-Z0-9().,:*/^+\-−]*[¤A-Z0-9)]')
+_FXT = re.compile(r'(?<![\w¤$])=?[(¤A-Z0-9][¤A-Z0-9().,:*/^+\-−%]*[¤A-Z0-9)%]')
 
 
 def FXW(t):
     """Wrap formula tokens inside Hebrew text in an isolated LTR span, so =¤D¤9*¤D¤10 keeps its order."""
     def w(m):
         x = m.group(0)
-        if not (re.search(r'[A-Z]{1,2}¤?\d', x) and re.search(r'[¤*^(/]', x)): return x
+        if not (x.startswith('=') and len(x) > 2 or re.search(r'[A-Z]{1,2}¤?\d', x) and re.search(r'[¤*^(/]', x)): return x
         return f'<span class="xlf" dir="ltr">{x}</span>'
     return ''.join(seg if seg.startswith('<') or seg.startswith('$') else _FXT.sub(w, seg) for seg in re.split(r'(<[^>]+>|\$[^$]+\$)', t))
 
 
-def XLS(sid, title, h, task, data, sol, widths, head, rows=None, cols=None, hints=None, remind=None, partial=None, chart=None, values=False, done='', extra='',
-        fmt=None, traps=None, allow=None, r0=1, maxh=None, tol=None, need=None, needMsg=None, xname=None, xtitle=None):
-    """A question with an embedded live sheet. data: given cells; sol: target cell -> formula; fmt: cell -> pct2/num2...;
-    traps: target -> [(wrong formula, specific feedback)]; r0: first row shown (addresses stay as in the workbook)."""
+def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None, remind=None, partial=None, chart=None, values=False, done='', extra='',
+            fmt=None, traps=None, allow=None, r0=1, maxh=None, tol=None, need=None, needMsg=None, xname=None, xtitle=None, steps=None, side=False, title='', signMsg=None):
+    """The live sheet itself. side=True: the sheet sits beside a question, and its feedback goes under the question (an element .xfb)."""
     vals = xl_eval(data, sol)
     targets = list(sol)
     fmt = fmt or {}
     rs = rows or max(int(re.sub('[A-Z]', '', a)) for a in list(data) + targets)
     cs = cols or max(ord(a[0]) - 64 for a in list(data) + targets)
-    XSPECS.append(dict(sid=sid, name=xname or sid, title=xtitle or re.sub('<[^>]+>', '', h), task=re.sub('<[^>]+>', '', task).replace('¤', '$'), data=data, sol=sol, fmt=fmt, widths=widths, head=head, rows=rs, cols=cs, r0=r0, vals=vals, part=CUR[0]))
+    for st in steps or []:
+        assert all(st['cells'][a] == sol[a] for a in st['cells']), (sid, 'a step must write the solution formula')
+    if steps: assert set().union(*[set(st['cells']) for st in steps]) == set(sol), (sid, 'the steps must cover every target')
+    XSPECS.append(dict(sid=sid, name=xname or sid, title=xtitle or re.sub('<[^>]+>', '', title), task=re.sub('<[^>]+>', '', task).replace('¤', '$'), data=data, sol=sol, fmt=fmt, widths=widths, head=head, rows=rs, cols=cs, r0=r0, vals=vals, part=CUR[0]))
     if MODE == 'pdf':
         L = [chr(65 + i) for i in range(cs)]
         t = ''
@@ -249,9 +251,11 @@ def XLS(sid, title, h, task, data, sol, widths, head, rows=None, cols=None, hint
                 tag = 'th' if r in head else 'td'
                 t += f'<tr><td class="rn">{r}</td>' + ''.join(f'<{tag}>{TX(x)}</{tag}>' for x in cells) + '</tr>'
         hdr = '<tr><th class="rn"></th>' + ''.join(f'<th>{c}</th>' for c in L) + '</tr>'
-        fm = '<p class="fml">' + ' '.join(f'<span class="fx"><b>{a}</b> ' + XL(sol[a].replace('$', '¤')) + '</span>' for a in _repr_targets(sol)) + '</p>'
-        S(sid, title, h, f'<p class="qstem">{TX(task)}</p><table class="tbl2 xlp">{hdr}{t}</table>{fm}')
-        return
+        if steps:
+            fm = '<ol class="xsteps">' + ''.join(f'<li>{TX(FXW(st["note"]))} ' + ' '.join(f'<span class="fx"><b>{a}</b> ' + XL(st['cells'][a].replace('$', '¤')) + '</span>' for a in _repr_targets(st['cells'])) + '</li>' for st in steps) + '</ol>'
+        else:
+            fm = '<p class="fml">' + ' '.join(f'<span class="fx"><b>{a}</b> ' + XL(sol[a].replace('$', '¤')) + '</span>' for a in _repr_targets(sol)) + '</p>'
+        return f'<p class="qstem">{TX(task)}</p><table class="tbl2 xlp">{hdr}{t}</table>{fm}'
     NACT[0] += 1
     cfgd = dict(rows=rs, cols=cs, widths=widths, data={k: str(v) for k, v in data.items()}, targets=targets, solution=sol, headRows=head, inputs=[], fmt=fmt, solFmt=fmt,
                 hints=[TX(FXW(x)) for x in (hints or ['קראו שוב את כותרת העמודה, וכתבו את החישוב במילים לפני הנוסחה.'])], remind=TX(FXW(remind or '')), partial=partial or targets[:1], values=values, done=TX(FXW(done)))
@@ -261,13 +265,47 @@ def XLS(sid, title, h, task, data, sol, widths, head, rows=None, cols=None, hint
     if r0 > 1: cfgd['r0'] = r0
     if maxh: cfgd['maxh'] = maxh
     if tol is not None: cfgd['tol'] = tol
+    if signMsg: cfgd['signMsg'] = TX(signMsg)
     if need: cfgd['need'] = need; cfgd['needMsg'] = needMsg or ''
-    side = ''
+    if steps: cfgd['steps'] = [dict(cells=st['cells'], note=TX(FXW(st['note'])), **({'sel': st['sel']} if st.get('sel') else {}), **({'sel2': st['sel2']} if st.get('sel2') else {})) for st in steps]
+    sv = ''
     if chart:
         cfgd['chart'] = chart
-        side = f'<svg class="xlc" viewBox="0 0 {chart.get("W", 470)} {chart.get("H", 330)}" role="img" aria-label="תרשים"></svg>'
-    body = f'<div class="act xlq" id="{sid}-x" data-cfg="{_cfg(cfgd)}"><div class="tasktxt">{TX(task)}</div><div class="xlrow{"" if chart else " solo"}"><div class="sheet"></div><div class="xlside">{side}</div></div>{extra}</div>'
-    S(sid, title, h, body, kick=f'חלק {CUR[0]} · אקסל בתוך השקף')
+        sv = f'<svg class="xlc" viewBox="0 0 {chart.get("W", 470)} {chart.get("H", 330)}" role="img" aria-label="תרשים"></svg>'
+    if side:
+        return cfgd, f'<div class="tasktxt sm">{TX(task)}</div><div class="sheet"></div>{extra}'
+    return cfgd, f'<div class="tasktxt">{TX(task)}</div><div class="xlrow{"" if chart else " solo"}"><div class="sheet"></div><div class="xlside">{sv}</div></div>{extra}'
+
+
+def XLS(sid, title, h, task, data, sol, widths, head, **kw):
+    """A slide with one live sheet and its task."""
+    r = _xsheet(sid, task, data, sol, widths, head, title=h, **kw)
+    if MODE == 'pdf':
+        S(sid, title, h, r); return
+    cfgd, inner = r
+    S(sid, title, h, f'<div class="act xlq" id="{sid}-x" data-cfg="{_cfg(cfgd)}">{inner}</div>', kick=f'חלק {CUR[0]} · אקסל בתוך השקף')
+
+
+def QX(sid, tag, title, stem, task, data, sol, widths, head, note=None, **kw):
+    """A question beside the live sheet in which it is solved. No algebra: the steps are formulas in the sheet."""
+    head_t = f'{tag}: {title}'
+    stem_html = ''.join(f'<p>{TX(x)}</p>' for x in stem)
+    notes = ''.join(BAND(a, t) for a, t in (note or []))
+    r = _xsheet(sid, task, data, sol, widths, head, side=True, title=head_t, **kw)
+    if MODE == 'pdf':
+        S(sid, head_t, head_t, f'<div class="qstem">{stem_html}</div>{r}{notes}', kind='q'); return
+    cfgd, inner = r
+    S(sid, head_t, head_t, f'<div class="act xlq qx" id="{sid}-x" data-cfg="{_cfg(cfgd)}"><div class="qr"><div class="card qstem">{stem_html}</div>{notes}<div class="xfb"></div></div><div class="xw">{inner}</div></div>',
+      kick=f'חלק {CUR[0]} · {tag}', cls='qslide')
+
+
+def MCX(sid, title, h, item, task, data, sol, widths, head, **kw):
+    """A multiple choice question with a live sheet beside it, where the answer is computed with the right formula."""
+    r = _xsheet(sid, task, data, sol, widths, head, side=True, title=h, **kw)
+    if MODE == 'pdf':
+        S(sid, title, h, item + r); return
+    cfgd, inner = r
+    S(sid, title, h, f'<div class="act xlq qx" id="{sid}-x" data-cfg="{_cfg(cfgd)}"><div class="qr">{item}<div class="xfb"></div></div><div class="xw">{inner}</div></div>', kick=f'חלק {CUR[0]} · שאלה ואקסל', cls='qslide')
 
 
 def _repr_targets(sol):

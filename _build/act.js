@@ -51,7 +51,7 @@ $$('.xlq').forEach(b=>{const cfg=cfg0(b),host=$('.sheet',b),svg=$('svg.xlc',b);l
    if(pts.length&&!single){const [x,y]=pts[pts.length-1];p+=f.tx(f.X(x)-8,f.Y(y)+(se.dy||-10),se.lab,{a:'end',fill:se.c,w:800,fs:17});}});
   if(single&&c.series[0].lab)p+=f.tx(f.W-f.mr-4,f.mt+16,c.series[0].lab,{a:'end',fill:c.series[0].c,w:800,fs:16});
   svg.innerHTML=p;};
- cfg.onChange=draw;api=XL.mount(host,cfg);host.__api=api;const fbx=$('.xl-fb',host);if(fbx)$('.xlside',b).appendChild(fbx);draw();});
+ cfg.onChange=draw;api=XL.mount(host,cfg);host.__api=api;const fbx=$('.xl-fb',host);if(fbx)($('.xfb',b)||$('.xlside',b)).appendChild(fbx);draw();});
 
 /* ---------- worked exercise with hints, reminder, partial and full solution ---------- */
 $$('.sv').forEach(b=>{const parts=$$('.svp',b),fb=$('.fbbar',b),sol=$$('.svs',b);let h=0;const H=cfg0(b);
