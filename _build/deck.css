@@ -326,3 +326,5 @@ code.xl{direction:ltr;unicode-bidi:isolate;display:inline-block;font:700 20px 'M
 .xl-g thead th{position:sticky;top:0;z-index:6}
 .xl-g thead th.xl-c0{z-index:7}
 .xlf{direction:ltr;unicode-bidi:isolate;font-family:Consolas,'Courier New',monospace;font-size:.92em;white-space:nowrap}
+.xl-g td.frz{position:sticky;z-index:4;box-shadow:inset 0 -2px 0 #c8d4f2}
+.xl-g th.frz{position:sticky;z-index:5}

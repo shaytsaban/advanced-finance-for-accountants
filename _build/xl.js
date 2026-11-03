@@ -154,8 +154,10 @@ function mount(host,cfg){
   g.querySelectorAll('td').forEach(el=>{const a=el.dataset.a;if(editing&&editing.a===a)return;const p=parseAddr(a);
    const raw=S.raw[a];let d=display(S,a);if(showF&&raw&&raw[0]==='=')d={t:raw,n:false,f:true};
    el.className=(d.n?'n':'')+(d.f?' f':'')+(d.e?' e':'')+(inSel(p.r,p.c)?' sel':'')+(p.r===sel.r&&p.c===sel.c?' act':'')+(cfg.inputs&&cfg.inputs.includes(a)?' in':'')+(cfg.targets&&cfg.targets.includes(a)?' tg':'')+(marks[a]?' '+marks[a]:'')+(cfg.headRows&&cfg.headRows.includes(p.r+1)?' hd':'');
+   /* freeze the table's header row in a scrolling sheet, like Freeze Panes */
+   if(cfg.maxh&&cfg.headRows&&cfg.headRows.length&&p.r+1===cfg.headRows[0]){el.classList.add('frz');el.style.top=g.tHead.offsetHeight+'px';const rn=el.parentElement.firstElementChild;rn.classList.add('frz');rn.style.top=el.style.top;}
    el.innerHTML=(d.n||d.f?`<span dir="ltr">${esc(d.t)}</span>`:esc(d.t))+(p.r===Math.max(sel.r,sel2.r)&&p.c===Math.max(sel.c,sel2.c)&&!editing?'<i class="xl-fh"></i>':'');});
-  const ae=td(addr(sel.r,sel.c));if(ae&&cfg.maxh){const w=host.querySelector('.xl-wrap'),hb=g.tHead.offsetHeight;if(ae.offsetTop<w.scrollTop+hb)w.scrollTop=ae.offsetTop-hb;else if(ae.offsetTop+ae.offsetHeight>w.scrollTop+w.clientHeight)w.scrollTop=ae.offsetTop+ae.offsetHeight-w.clientHeight;}
+  const ae=td(addr(sel.r,sel.c));if(ae&&cfg.maxh){const w=host.querySelector('.xl-wrap'),fr=g.querySelector('td.frz'),hb=g.tHead.offsetHeight+(fr&&ae.offsetTop>fr.offsetTop?fr.offsetHeight:0);if(ae.offsetTop<w.scrollTop+hb)w.scrollTop=ae.offsetTop-hb;else if(ae.offsetTop+ae.offsetHeight>w.scrollTop+w.clientHeight)w.scrollTop=ae.offsetTop+ae.offsetHeight-w.clientHeight;}
   nameB.textContent=selName();if(!editing||editing.where!=='bar')bar.value=S.raw[addr(sel.r,sel.c)]||'';
   if(cfg.onSelect)cfg.onSelect(selName());}
  function startEdit(initial,keep){const a=addr(sel.r,sel.c);sel2={...sel};editing={a,where:'cell',orig:S.raw[a]||''};const el=td(a);
