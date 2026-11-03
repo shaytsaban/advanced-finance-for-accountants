@@ -12,7 +12,7 @@ R = lambda f: open(os.path.join(H, f), encoding='utf8').read()
 MODE = 'pdf'
 LESSON = int(sys.argv[1]) if len(sys.argv) > 1 else 1
 exec(R('content_a.py'))
-OUT = os.path.join(H, '..', 'materials')
+OUT = os.path.join(H, 'out')   # not published: a check of the specs (three engines); the site has lesson-N-appendix.xlsx
 NAVY, YEL, GRN, GIV = '1B2D55', 'FFF4C2', 'DDF5E6', 'EEF2FF'
 thin = Side(style='thin', color='D9D2C3'); BOX = Border(left=thin, right=thin, top=thin, bottom=thin)
 NOTE = 'הנתונים בגיליון לקוחים מהשאלות של הקורס ואינם נתוני שוק.'

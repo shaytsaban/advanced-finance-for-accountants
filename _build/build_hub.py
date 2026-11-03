@@ -5,12 +5,14 @@ n = lambda s: f'<span class="n">{s}</span>'
 UP = [(2, 'אג״ח: מחיר לפי תאריכים, לפני ואחרי קופון'), (3, 'חילוץ תשואה לפדיון ותשואה לתקופת החזקה'), (4, 'מלווה קצר מועד (מק״מ), אג״ח צמיתה ומשמעות משך החיים הממוצע (מח״מ)'), (5, 'אג״ח צמודות למדד ולדולר'), (6, 'תמחור מניות: מודל הדיבידנדים, תשואת דיבידנד ומכפיל רווח'), (7, 'תמחור מניות: הזדמנויות צמיחה, מכפיל ענפי ודיבידנד רבעוני'), (8, 'מחיר ההון של החברה: ביטא ומחיר הון ממוצע משוקלל'), ('9 ו-10', 'מינוף פיננסי: מודיליאני ומילר, בלי מסים ועם מסים'), (11, 'חכירה לעומת רכישה')]
 D = open(os.path.join(H, '..', 'lectures', 'lecture-1', 'presentation.html'), encoding='utf8').read()
 NS, NX, NM = D.count('<section class="slide'), D.count('act xlq'), D.count('class="mc"')
-import openpyxl
-NW = len(openpyxl.load_workbook(os.path.join(H, '..', 'materials', 'practice-1.xlsx')).sheetnames) - 1
 ups = ''.join(f'<li><span class="un">{n(i if isinstance(i, int) else i.replace(" ו-", "-"))}</span><span>{t}</span><em>בקרוב</em></li>' for i, t in UP)
 src = open(os.path.join(H, '..', '..', 'finance-for-managers', 'index.html'), encoding='utf8').read()
 css = re.search(r'<style>(.*?)</style>', src, re.S).group(1)
 css += '''
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.cnote{font-size:15px;color:var(--mut);margin-top:8px}
+.grp{margin-bottom:14px}.grp h5{font-size:15.5px;font-weight:800;color:var(--navy2);margin:0 0 8px}
+@media (max-width:760px){.cgrid{grid-template-columns:1fr}}
 .contact{margin-top:14px;background:#fff7e0;border:2px solid #f0b429;border-radius:18px;padding:16px 24px;display:flex;gap:16px;align-items:center}
 .contact .ic{font-size:34px;flex:none}
 .contact h2{font-size:20px;font-weight:800;line-height:1.3;color:var(--navy2)}
@@ -74,37 +76,47 @@ page = f'''<!doctype html>
 <div><h2>פניות לד״ר שי צבאן רק במייל: <a href="mailto:shay.tsaban@gmail.com">shay.tsaban@gmail.com</a></h2>
 <p>תכתובות בכל ערוץ אחר לא ייענו. <b>חובה לרשום בכל תכתובת את שם המוסד ואת שם הקורס.</b></p></div>
 </section>
-<div class="solutions">
-<div class="ic">📋</div>
-<div><span class="tag">מסמך הקורס</span><h3>סילבוס הקורס</h3>
-<p>{n(11)} נושאים, לפי סדר קובצי השיעורים: אג״ח, מניות, מחיר ההון, מבנה ההון וחכירה.</p>
-<div class="warn">מועדי המפגשים והרכב הציון יעודכנו כאן ובסילבוס.</div></div>
-<a class="btn2" href="materials/syllabus.pdf" target="_blank" rel="noopener">פתיחת הסילבוס<small>PDF</small></a>
+<section class="block" id="course-files">
+<h2 class="sec">קובצי הקורס</h2>
+<div class="cgrid">
+<a class="lk s" href="materials/syllabus.pdf" target="_blank" rel="noopener"><span class="e">📋</span><span><b>סילבוס הקורס (PDF)</b><span class="d">{n(11)} נושאים, לפי סדר קובצי השיעורים. מועדי המפגשים והרכב הציון יעודכנו.</span></span></a>
+<a class="lk p" href="materials/afm-exercises.pdf" target="_blank" rel="noopener"><span class="e">📚</span><span><b>קובץ התרגילים המלא (PDF)</b><span class="d">פרק לכל שיעור, עם תרגילים, תרגילים מאתגרים ותרגילים בסגנון בחינה. מכאן תרגילי הבית.</span></span></a>
+<a class="lk r" href="materials/afm-solutions.pdf" target="_blank" rel="noopener"><span class="e">✅</span><span><b>חוברת הפתרונות המלאה (PDF)</b><span class="d">פתרון מפורט לכל תרגיל בקובץ התרגילים, באותו סדר ומספור.</span></span></a>
+<a class="lk x" href="materials/afm-solutions.xlsx" download><span class="e">📊</span><span><b>פתרונות קובץ התרגילים (Excel)</b><span class="d">אותם פתרונות בנוסחאות חיות, גיליון לכל שיעור.</span></span></a>
 </div>
+<p class="cnote">בכרטיס של כל שיעור למטה מופיע רק הפרק של אותו שיעור מכל אחד מהקבצים האלה.</p>
+</section>
 <section class="block">
 <h2 class="sec">השיעורים</h2>
 <article class="lec" id="lesson-1">
-<div class="lec-head"><div class="lec-n">1</div><div><h3>אג״ח שקליות: שווי, ריבית נקובה ותשואה לפדיון</h3><div class="sub">מפגש {n(1)} · תרגול: קובץ התרגילים, פרק {n(1)}</div></div></div>
+<div class="lec-head"><div class="lec-n">1</div><div><h3>אג״ח שקליות: שווי, ריבית נקובה ותשואה לפדיון</h3><div class="sub">מפגש {n(1)} · תרגילי בית: פרק {n(1)} בקובץ התרגילים</div></div></div>
 <div class="lec-body">
 <div><h4>מה לומדים בשיעור</h4><ul class="learn">
 <li>אגרת חוב (אג״ח): ערך נקוב, ריבית נקובה, קופון ומועד פדיון</li>
 <li>שיעור תשואה לפדיון (YTM), רציונל ותהליך התמחור</li>
 <li>שווי אג״ח בטבלת תזרימים ובפונקציות NPV ו-PV, ומוסכמת הסימן</li>
-<li>פרמיה, נכיון ופארי, וקופון חצי שנתי: המרת תשואה בחזקה</li>
+<li>פרמיה, נכיון ופארי, וקופון חצי שנתי ורבעוני</li>
 <li>אג״ח לשיעורין: לוח סילוקין וקופון על היתרה</li>
 </ul></div>
-<div><h4>חומרי השיעור</h4><div class="links">
-<a class="lk p" href="lectures/lecture-1/presentation.html"><span class="e">🖥️</span><span><b>מצגת השיעור</b><span class="d">{n(NS)} שקפים, {n(NX)} גיליונות Excel חיים בתוך השקפים ו-{n(NM)} שאלות רב ברירה, עם רמזים, משוב ופתרונות</span></span></a>
-<a class="lk s" href="lectures/lecture-1/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת: הגדרות, כל השאלות עם פתרון בגיליון, ומילון מושגים</span></span></a>
-<a class="lk x" href="materials/practice-1.xlsx" download><span class="e">📊</span><span><b>קובץ תרגול (Excel)</b><span class="d">{n(NW)} גיליונות, כמו במצגת ובאותן כתובות תאים. מזינים נתונים ונוסחאות בתאים הצהובים</span></span></a>
-<a class="lk x" href="materials/lesson-1-appendix.xlsx" download><span class="e">📎</span><span><b>נספח Excel לשיעור</b><span class="d">כל שאלות השיעור בגיליון אחד, עם נוסח השאלה מעל כל טבלה. שני גיליונות: ללא פתרון ועם פתרון</span></span></a>
-<a class="lk r" href="materials/practice-1-solutions.xlsx" download><span class="e">✅</span><span><b>קובץ פתרונות (Excel)</b><span class="d">נוסחאות חיות ותרשים. פותחים רק אחרי שפותרים</span></span></a>
+<div><h4>חומרי השיעור</h4>
+<div class="grp"><h5>1. בשיעור</h5><div class="links">
+<a class="lk p" href="lectures/lecture-1/presentation.html"><span class="e">🖥️</span><span><b>מצגת השיעור</b><span class="d">המצגת שבה עובדים בשיעור: {n(NS)} שקפים, וגיליון Excel חי ליד כל שאלה ({n(NX)} גיליונות), עם בדיקה ומשוב.</span></span></a>
+<a class="lk x" href="materials/lesson-1-appendix.xlsx" download><span class="e">📊</span><span><b>אקסל תרגילי השיעור</b><span class="d">כל שאלות המצגת, לעבודה ב-Excel בלי המצגת. גיליון ״ללא פתרון״ עם תבנית לכל שאלה, וגיליון ״עם פתרון״.</span></span></a>
+</div></div>
+<div class="grp"><h5>2. אחרי השיעור, לחזרה</h5><div class="links">
+<a class="lk s" href="lectures/lecture-1/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת במסמך אחד: הגדרות, השאלות והפתרון שלהן בגיליון, ומילון מושגים.</span></span></a>
+</div></div>
+<div class="grp"><h5>3. תרגילי בית</h5><div class="links">
+<a class="lk p" href="lectures/lecture-1/exercises-1.pdf" target="_blank" rel="noopener"><span class="e">📝</span><span><b>תרגילי הבית: פרק {n(1)} בקובץ התרגילים (PDF)</b><span class="d">תרגילים {n('1.1')} עד {n('1.18')} ושני תרגילים בסגנון בחינה.</span></span></a>
+<a class="lk r" href="lectures/lecture-1/solutions-1.pdf" target="_blank" rel="noopener"><span class="e">✅</span><span><b>פתרונות תרגילי הבית (PDF)</b><span class="d">פרק {n(1)} בחוברת הפתרונות: פתרון מפורט, שלב אחר שלב. פותחים רק אחרי שפותרים.</span></span></a>
+<a class="lk x" href="lectures/lecture-1/solutions-1.xlsx" download><span class="e">📊</span><span><b>פתרונות תרגילי הבית (Excel)</b><span class="d">אותם פתרונות בנוסחאות חיות.</span></span></a>
 </div></div>
 </div>
-<div class="todo"><h4>📝 תרגול עצמי לשיעור {n(1)}</h4><ol>
-<li>במצגת: חלק 5, שישה תרגילים ושאלות רב ברירה, כל אחת עם גיליון.</li>
-<li>בקובץ התרגול ב-Excel: קודם פותרים, ורק אחר כך משווים לקובץ הפתרונות.</li>
-<li>קובץ התרגילים, פרק {n(1)}: תרגילים {n('1.1')} עד {n('1.11')}, {n('1.13')}, {n('1.17')} ו-{n('1.18')}, ותרגיל בסגנון בחינה {n(1)}, סעיפים א עד ג.</li>
+</div>
+<div class="todo"><h4>📝 מה עושים בשיעור {n(1)}</h4><ol>
+<li><b>בשיעור:</b> עובדים במצגת. מי שמעדיף לעבוד ב-Excel עובד באקסל תרגילי השיעור, שבו אותן שאלות.</li>
+<li><b>תרגילי בית:</b> פרק {n(1)} בקובץ התרגילים. תרגילים {n('1.12')}, {n('1.14')} עד {n('1.16')} וסעיף ד בתרגיל בסגנון בחינה {n(1)} עוסקים בשווי בין מועדי תשלום, שנלמד בשיעור {n(2)}.</li>
+<li><b>בדיקה:</b> רק אחרי שפתרתם, בפתרונות תרגילי הבית.</li>
 </ol></div>
 </article>
 <h2 class="sec" style="margin-top:36px">השיעורים הבאים</h2>
