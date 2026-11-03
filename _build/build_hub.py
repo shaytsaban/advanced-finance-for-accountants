@@ -6,15 +6,16 @@ UP = [(2, 'אג״ח לשיעורין, ומחיר לפי תאריכים, לפני
 UP = UP[1:]   # lesson 2 has its card
 ups = ''.join(f'<li><span class="un">{n(i if isinstance(i, int) else i.replace(" ו-", "-"))}</span><span>{t}</span><em>בקרוב</em></li>' for i, t in UP)
 # Shay, 2026-11-03: lesson 1 ended before amortizing bonds; they open lesson 2. Homework is cut from chapter 1 by what each lesson taught.
-LATER = f'תרגילים {n("1.12")}, {n("1.14")} עד {n("1.16")}, סעיף ד בתרגיל בסגנון בחינה {n(1)} ותרגיל בסגנון בחינה {n(2)} עוסקים בשווי בין מועדי תשלום, ויצורפו לשיעור שבו נלמד הנושא.'
 LESSONS = [
- dict(k=1, h='אג״ח שקליות: שווי, ריבית נקובה ותשואה לפדיון',
+ dict(k=1, date='3.11.2026', rec='https://youtu.be/DHylIX0bqH0', h='אג״ח שקליות: שווי, ריבית נקובה ותשואה לפדיון',
       learn=['אגרת חוב (אג״ח): ערך נקוב, ריבית נקובה, קופון ומועד פדיון', 'שיעור תשואה לפדיון (YTM), רציונל ותהליך התמחור', 'שווי אג״ח בטבלת תזרימים ובפונקציות NPV ו-PV, ומוסכמת הסימן',
              'פרמיה, נכיון ופארי, וקופון חצי שנתי ורבעוני', 'שבעה תרגילים חדשים לעבודה עצמית, עם רמזים ופתרון'],
-      hw=', '.join(n(x) for x in ['1.1', '1.2', '1.4', '1.5', '1.6', '1.8', '1.9', '1.17']) + ' ו-' + n('1.18'), hwnote='שאר תרגילי פרק 1 עוסקים באג״ח לשיעורין, שנלמדת בשיעור 2, ובשווי בין מועדי תשלום.'),
- dict(k=2, h='אג״ח לשיעורין: לוח סילוקין וקופון על היתרה',
-      learn=['אג״ח לשיעורין ויתרת ערך נקוב', 'הקופון מחושב על היתרה בתחילת התקופה', 'לוח סילוקין מלא בגיליון, ושווי ב-NPV', 'לשיעורין עם קופון חצי שנתי ורבעוני, ותרגיל בסגנון בחינה', 'תרגול על כל נושאי האג״ח השקליות, כולל תרגילי הבית של שיעור 1'],
-      hw=', '.join(n(x) for x in ['1.3', '1.7', '1.10', '1.11']) + ' ו-' + n('1.13') + f', ותרגיל בסגנון בחינה {n(1)}, סעיפים א עד ג', hwnote=LATER),
+      hw=f'מפרק {n(1)}: תרגילים ' + ', '.join(n(x) for x in ['1.1', '1.2', '1.4', '1.5', '1.6', '1.8', '1.9', '1.17']) + ' ו-' + n('1.18'), hwnote=f'שאר תרגילי פרק {n(1)} עוסקים באג״ח לשיעורין ובשווי בין מועדי תשלום, ונמצאים בתרגילי הבית של שיעור {n(2)}.'),
+ dict(k=2, h='אג״ח לשיעורין ושווי לאורך חיי האג״ח',
+      learn=['אג״ח לשיעורין ויתרת ערך נקוב: הקופון מחושב על היתרה בתחילת התקופה', 'לוח סילוקין מלא בגיליון, ושווי ב-NPV, גם בקופון חצי שנתי ורבעוני', 'שווי מיד אחרי תשלום ורגע לפני תשלום',
+             'שווי בין מועדי תשלום: NPV ודחיפה קדימה לפי חודשים', 'תרגיל בסגנון בחינה ותרגול על כל נושאי האג״ח השקליות'],
+      hw=f'מפרק {n(1)}: תרגילים {n("1.3")}, {n("1.7")}, {n("1.10")} עד {n("1.16")} ושני התרגילים בסגנון בחינה. מפרק {n(2)}: תרגילים ' + ', '.join(n(x) for x in ['2.1', '2.3', '2.4', '2.6', '2.7', '2.8', '2.9', '2.11', '2.13', '2.15']) + f' ו-{n("2.17")}, ותרגיל בסגנון בחינה {n(1)}',
+      hwnote=f'שאר התרגילים בפרק {n(2)} עוסקים בחילוץ תשואה לפדיון ב-IRR וב-RATE, הנושא של שיעור {n(3)}.'),
 ]
 
 
@@ -24,7 +25,7 @@ def card(L):
     NS, NX = D.count('<section class="slide'), D.count('act xlq')
     learn = ''.join(f'<li>{x}</li>' for x in L['learn'])
     return f'''<article class="lec" id="lesson-{k}">
-<div class="lec-head"><div class="lec-n">{k}</div><div><h3>{L['h']}</h3><div class="sub">מפגש {n(k)} · תרגילי בית: {L['hw']}</div></div></div>
+<div class="lec-head"><div class="lec-n">{k}</div><div><h3>{L['h']}</h3><div class="sub">מפגש {n(k)}{(' · ' + n(L['date'])) if L.get('date') else ''}</div></div></div>
 <div class="lec-body">
 <div><h4>מה לומדים בשיעור</h4><ul class="learn">
 {learn}
@@ -35,10 +36,11 @@ def card(L):
 <a class="lk x" href="materials/lesson-{k}-appendix.xlsx" download><span class="e">📊</span><span><b>אקסל תרגילי השיעור</b><span class="d">כל שאלות המצגת, לעבודה ב-Excel בלי המצגת. גיליון ״ללא פתרון״ עם תבנית לכל שאלה, וגיליון ״עם פתרון״.</span></span></a>
 </div></div>
 <div class="grp"><h5>2. אחרי השיעור, לחזרה</h5><div class="links">
+{f'<a class="lk r" href="{L["rec"]}" target="_blank" rel="noopener"><span class="e">🎬</span><span><b>הקלטת השיעור (YouTube)</b><span class="d">ההקלטה המלאה של המפגש מ-{n(L["date"])}.</span></span></a>' if L.get('rec') else ''}
 <a class="lk s" href="lectures/lecture-{k}/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת במסמך אחד: הגדרות, השאלות והפתרון שלהן בגיליון, ומילון מושגים.</span></span></a>
 </div></div>
 <div class="grp"><h5>3. תרגילי בית</h5><div class="links">
-<a class="lk p" href="lectures/lecture-{k}/exercises-{k}.pdf" target="_blank" rel="noopener"><span class="e">📝</span><span><b>תרגילי הבית (PDF)</b><span class="d">מפרק {n(1)} בקובץ התרגילים: {L['hw']}.</span></span></a>
+<a class="lk p" href="lectures/lecture-{k}/exercises-{k}.pdf" target="_blank" rel="noopener"><span class="e">📝</span><span><b>תרגילי הבית (PDF)</b><span class="d">מקובץ התרגילים, {L['hw']}.</span></span></a>
 <a class="lk r" href="lectures/lecture-{k}/solutions-{k}.pdf" target="_blank" rel="noopener"><span class="e">✅</span><span><b>פתרונות תרגילי הבית (PDF)</b><span class="d">הפתרונות של אותם תרגילים מחוברת הפתרונות, שלב אחר שלב. פותחים רק אחרי שפותרים.</span></span></a>
 <a class="lk x" href="lectures/lecture-{k}/solutions-{k}.xlsx" download><span class="e">📊</span><span><b>פתרונות תרגילי הבית (Excel)</b><span class="d">אותם פתרונות בנוסחאות חיות.</span></span></a>
 </div></div>

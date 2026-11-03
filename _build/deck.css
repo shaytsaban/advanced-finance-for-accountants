@@ -88,6 +88,7 @@ svg .st:not(.show){opacity:0}
 .route.r5{grid-template-columns:repeat(5,1fr)}
 .route.r4{grid-template-columns:repeat(4,1fr)}
 .route.r2{grid-template-columns:repeat(2,1fr)}
+.route.r3{grid-template-columns:repeat(3,1fr)}
 .rcard{display:flex;flex-direction:column;align-items:flex-start;background:#fff;border-radius:16px;padding:12px 14px;text-align:right;box-shadow:0 2px 0 var(--line),0 10px 24px rgba(22,33,58,.07);min-height:224px;transition:transform .2s}
 .rcard:hover{transform:translateY(-4px)}
 .rcard>.n{font-size:38px;font-weight:800;color:var(--coral);line-height:1}

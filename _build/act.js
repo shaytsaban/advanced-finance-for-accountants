@@ -90,7 +90,7 @@ window.__fitSheets=function(slide){const st=document.getElementById('stage'),sr=
  slide.querySelectorAll('.xl-wrap').forEach(w=>{
   /* columns widen to the width of the sheet's area (the row-number column stays) */
   const tb=w.querySelector('table'),ths=[...tb.tHead.rows[0].cells].slice(1);ths.forEach(th=>{if(!th.dataset.w0)th.dataset.w0=parseFloat(th.style.width)||92;th.style.width=th.dataset.w0+'px';});
-  const base=ths.reduce((t,th)=>t+ +th.dataset.w0,0),wroom=w.clientWidth-36-2;if(wroom>base+8){const f=Math.min(1.8,wroom/base);ths.forEach(th=>{th.style.width=Math.floor(th.dataset.w0*f)+'px';});}
+  const base=ths.reduce((t,th)=>t+ +th.dataset.w0,0),wroom=w.clientWidth-36-2-(w.scrollHeight>w.clientHeight+1?0:16);/* room for a vertical scrollbar that may appear once the height is capped: on a right to left sheet it sits on the left, over the last column and its fill handle */if(wroom>base+8){const f=Math.min(1.8,wroom/base);ths.forEach(th=>{th.style.width=Math.floor(th.dataset.w0*f)+'px';});}
   w.style.maxHeight='none';const top=(w.getBoundingClientRect().top-sr.top)/k,need=w.scrollHeight;const xf=w.closest('.xw')&&w.closest('.xw').querySelector('.xfb'),fbr=xf?(xf.getBoundingClientRect().height/k+(xf.textContent.trim()?6:0)):0;const room=Math.floor(limit-top-fbr);
   w.style.maxHeight=Math.max(150,Math.min(need,room))+'px';});};
 })();
