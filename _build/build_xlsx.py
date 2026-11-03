@@ -121,7 +121,7 @@ for s in XSPECS:
     if s['sid'] in KEY:
         a, e = KEY[s['sid']]; v = V[sname(s)][a].value
         assert abs(v - e) < 1e-6, (s['sid'], a, v, e)
-print('key answers match the lesson file and the exercise file:', len(KEY))
+print('key answers match the lesson file and the exercise file:', sum(s['sid'] in KEY for s in XSPECS))
 assert not errs
 shutil.copy(rec, raw)   # ship the recalculated copy, so values also show in Protected View
 shutil.rmtree(d, True)

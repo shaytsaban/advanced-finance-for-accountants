@@ -86,9 +86,11 @@ svg .st:not(.show){opacity:0}
 /* route */
 .route{display:grid;gap:10px}
 .route.r5{grid-template-columns:repeat(5,1fr)}
+.route.r4{grid-template-columns:repeat(4,1fr)}
+.route.r2{grid-template-columns:repeat(2,1fr)}
 .rcard{display:flex;flex-direction:column;align-items:flex-start;background:#fff;border-radius:16px;padding:12px 14px;text-align:right;box-shadow:0 2px 0 var(--line),0 10px 24px rgba(22,33,58,.07);min-height:224px;transition:transform .2s}
 .rcard:hover{transform:translateY(-4px)}
-.rcard .n{font-size:38px;font-weight:800;color:var(--coral);line-height:1}
+.rcard>.n{font-size:38px;font-weight:800;color:var(--coral);line-height:1}
 .rcard b{font-size:21px;line-height:1.2;margin:6px 0 5px}
 .rcard span{font-size:18px;color:var(--ink2);line-height:1.3}
 .rcard em{font-style:normal;margin-top:auto;padding-top:6px;font-size:17px;font-weight:800;color:#087469}
