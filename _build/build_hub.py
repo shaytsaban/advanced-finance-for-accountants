@@ -24,19 +24,22 @@ def card(L):
     D = open(os.path.join(H, '..', 'lectures', f'lecture-{k}', 'presentation.html'), encoding='utf8').read()
     NS, NX = D.count('<section class="slide'), D.count('act xlq')
     learn = ''.join(f'<li>{x}</li>' for x in L['learn'])
+    yid = L['rec'].rstrip('/').split('/')[-1] if L.get('rec') else ''
+    rec = (f'<div class="rec" id="recording-{k}"><h4>🎥 הקלטת השיעור · {n(L["date"])}</h4><div class="recbox">'
+           f'<iframe src="https://www.youtube.com/embed/{yid}" title="הקלטת שיעור {k}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>'
+           f'<a class="yt" href="{L["rec"]}" target="_blank" rel="noopener">לצפייה ב-YouTube</a></div>') if yid else ''
     return f'''<article class="lec" id="lesson-{k}">
 <div class="lec-head"><div class="lec-n">{k}</div><div><h3>{L['h']}</h3><div class="sub">מפגש {n(k)}{(' · ' + n(L['date'])) if L.get('date') else ''}</div></div></div>
 <div class="lec-body">
 <div><h4>מה לומדים בשיעור</h4><ul class="learn">
 {learn}
-</ul></div>
+</ul>{rec}</div>
 <div><h4>חומרי השיעור</h4>
 <div class="grp"><h5>1. בשיעור</h5><div class="links">
 <a class="lk p" href="lectures/lecture-{k}/presentation.html"><span class="e">🖥️</span><span><b>מצגת השיעור</b><span class="d">המצגת שבה עובדים בשיעור: {n(NS)} שקפים, וגיליון Excel חי ליד כל שאלה ({n(NX)} גיליונות), עם בדיקה ומשוב.</span></span></a>
 <a class="lk x" href="materials/lesson-{k}-appendix.xlsx" download><span class="e">📊</span><span><b>אקסל תרגילי השיעור</b><span class="d">כל שאלות המצגת, לעבודה ב-Excel בלי המצגת. גיליון ״ללא פתרון״ עם תבנית לכל שאלה, וגיליון ״עם פתרון״.</span></span></a>
 </div></div>
 <div class="grp"><h5>2. אחרי השיעור, לחזרה</h5><div class="links">
-{f'<a class="lk r" href="{L["rec"]}" target="_blank" rel="noopener"><span class="e">🎬</span><span><b>הקלטת השיעור (YouTube)</b><span class="d">ההקלטה המלאה של המפגש מ-{n(L["date"])}.</span></span></a>' if L.get('rec') else ''}
 <a class="lk s" href="lectures/lecture-{k}/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת במסמך אחד: הגדרות, השאלות והפתרון שלהן בגיליון, ומילון מושגים.</span></span></a>
 </div></div>
 <div class="grp"><h5>3. תרגילי בית</h5><div class="links">
@@ -59,6 +62,11 @@ cards = ''.join(card(L) for L in LESSONS)
 src = open(os.path.join(H, '..', '..', 'finance-for-managers', 'index.html'), encoding='utf8').read()
 css = re.search(r'<style>(.*?)</style>', src, re.S).group(1)
 css += '''
+.rec{margin-top:18px}
+.rec h4{font-size:18px;margin-bottom:10px;color:var(--navy2)}
+.recbox{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#0c1426;box-shadow:0 10px 26px rgba(22,33,58,.18);border:3px solid var(--navy2)}
+.recbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.rec a.yt{display:inline-block;margin-top:8px;font-weight:700;font-size:15px;color:var(--navy2);text-decoration:underline}
 .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
 .cnote{font-size:15px;color:var(--mut);margin-top:8px}
 .grp{margin-bottom:14px}.grp h5{font-size:15.5px;font-weight:800;color:var(--navy2);margin:0 0 8px}
