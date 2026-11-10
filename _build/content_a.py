@@ -271,6 +271,37 @@ def _argnames(data, sol, head):
     return data
 
 
+def _auto_steps(data, sol, head, fmt):
+    """Shay, 2026-11-10: every sheet has a ״הצעד הבא״ button. Where a question has no hand-written steps, they are built from its
+    solution: one step per formula, and one step for a formula dragged down a column, each with its label and its result."""
+    vals = xl_eval(data, {**{a: v for a, v in data.items()}, **sol}) if sol else {}
+    def label(a):
+        col, row = re.match(r'([A-Z]+)(\d+)', a).groups(); row = int(row)
+        lab = [str(v) for k, v in data.items() if isinstance(v, str) and not v.startswith('=') and re.fullmatch(r'[A-Z]+' + str(row), k) and k < a and row not in head]
+        if lab: return re.sub(r'\s*\((rate|nper|pmt|pv|fv)\)$', '', lab[0])
+        hd = [str(data[k]) for k in data if re.fullmatch(col + r'(\d+)', k) and int(k[len(col):]) in head and int(k[len(col):]) < row]
+        return hd[-1] if hd else a
+    def shown(a):
+        v = vals.get(a)
+        return '' if not isinstance(v, (int, float)) else ', כלומר ' + _fmtx(v, fmt.get(a, ''))
+    out, keys, i = [], list(sol), 0
+    while i < len(keys):
+        a = keys[i]; col, row = re.match(r'([A-Z]+)(\d+)', a).groups(); j = i
+        # a run of cells in one column, one under the other, whose formulas differ only by their relative row numbers: one dragged step
+        def rel(k):
+            r = int(re.match(r'[A-Z]+(\d+)', k).group(1))
+            return re.sub(r'(?<![$A-Z])([A-Z]{1,2})(\d+)', lambda m: m.group(1) + 'R' + str(int(m.group(2)) - r), str(sol[k]))
+        while j + 1 < len(keys) and re.fullmatch(col + r'\d+', keys[j + 1]) and int(keys[j + 1][len(col):]) == int(keys[j][len(col):]) + 1 and str(sol[keys[j + 1]]).startswith('=') and rel(keys[j + 1]) == rel(a):
+            j += 1
+        f = str(sol[a])
+        if j > i:
+            out.append(dict(cells={k: sol[k] for k in keys[i:j + 1]}, note=f'{label(a)}: {f} בתא {a}, וגוררים עד {keys[j]}' + shown(a) + '.', sel=a, sel2=keys[j]))
+        else:
+            out.append(dict(cells={a: sol[a]}, note=f'{label(a)}: {f}' + shown(a) + '.', sel=a))
+        i = j + 1
+    return out
+
+
 def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None, remind=None, partial=None, chart=None, values=False, done='', extra='',
             fmt=None, traps=None, allow=None, r0=1, maxh=None, tol=None, need=None, needMsg=None, xname=None, xtitle=None, steps=None, side=False, title='', signMsg=None, qtext=None, build=None):
     """The live sheet itself. side=True: the sheet sits beside a question, and its feedback goes under the question (an element .xfb)."""
@@ -290,6 +321,8 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
     data = {a: v for a, v in data.items() if a not in inputs and a not in given_f}
     sol = {**inputs, **given_f, **sol}
     data = _argnames(dict(data), sol, head)
+    if not steps:
+        steps = _auto_steps(data, {a: v for a, v in sol.items() if a not in inputs and a not in given_f}, head, fmt)
     if steps:
         steps = ([dict(cells=dict(inputs), note='מזינים את נתוני השאלה בתאים, כפי שהם כתובים בשאלה. אחוזים כותבים עם סימן האחוז.', sel=next(iter(inputs)))] if inputs else []) + \
                 ([dict(cells=dict(given_f), note='התאמות לתקופה: ' + ' '.join(f'{a}: {f}' for a, f in given_f.items()))] if given_f else []) + steps

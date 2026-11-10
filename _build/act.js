@@ -51,7 +51,7 @@ $$('.xlq').forEach(b=>{const cfg=cfg0(b),host=$('.sheet',b),svg=$('svg.xlc',b);l
    if(pts.length&&!single){const [x,y]=pts[pts.length-1];p+=f.tx(f.X(x)-8,f.Y(y)+(se.dy||-10),se.lab,{a:'end',fill:se.c,w:800,fs:17});}});
   if(single&&c.series[0].lab)p+=f.tx(f.W-f.mr-4,f.mt+16,c.series[0].lab,{a:'end',fill:c.series[0].c,w:800,fs:16});
   svg.innerHTML=p;};
- cfg.onChange=draw;cfg.onFb=()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);};api=XL.mount(host,cfg);host.__api=api;const fbx=$('.xl-fb',host);if(fbx)($('.xfb',b)||$('.xlside',b)).appendChild(fbx);draw();
+ cfg.onChange=draw;cfg.onFb=()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);};api=XL.mount(host,cfg);host.__api=api;const fbx=$('.xl-fb',host);/* beside a question, the explanation of each step and the feedback sit in the question column, next to the sheet */if(fbx){const q=b.classList.contains('qx')&&!$('.qr svg.xlc',b)&&$('.qr',b);/* a question column that already holds a chart keeps the feedback under the sheet */if(q){const d=document.createElement('div');d.className='xfbs';q.appendChild(d);d.appendChild(fbx);}else($('.xfb',b)||$('.xlside',b)).appendChild(fbx);}draw();
  /* when feedback appears under a sheet, the sheet gives it room on the slide */
  if(fbx&&$('.xfb',b)){let t=null;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);},0);}).observe(fbx,{childList:true,subtree:true,characterData:true});}});
 
@@ -92,5 +92,7 @@ window.__fitSheets=function(slide){const st=document.getElementById('stage'),sr=
   const tb=w.querySelector('table'),ths=[...tb.tHead.rows[0].cells].slice(1);ths.forEach(th=>{if(!th.dataset.w0)th.dataset.w0=parseFloat(th.style.width)||92;th.style.width=th.dataset.w0+'px';});
   const base=ths.reduce((t,th)=>t+ +th.dataset.w0,0),wroom=w.clientWidth-36-2-(w.scrollHeight>w.clientHeight+1?0:16);/* room for a vertical scrollbar that may appear once the height is capped: on a right to left sheet it sits on the left, over the last column and its fill handle */if(wroom>base+8){const f=Math.min(1.8,wroom/base);ths.forEach(th=>{th.style.width=Math.floor(th.dataset.w0*f)+'px';});}
   w.style.maxHeight='none';const top=(w.getBoundingClientRect().top-sr.top)/k,need=w.scrollHeight;const xf=w.closest('.xw')&&w.closest('.xw').querySelector('.xfb'),fbr=xf?(xf.getBoundingClientRect().height/k+(xf.textContent.trim()?6:0)):0;const room=Math.floor(limit-top-fbr);
-  w.style.maxHeight=Math.max(150,Math.min(need,room))+'px';});};
+  w.style.maxHeight=Math.max(150,Math.min(need,room))+'px';});
+ /* the explanations beside the sheet use the height left in the question column, and scroll inside it */
+ slide.querySelectorAll('.qr .xfbs .xl-fb').forEach(f=>{f.style.maxHeight='none';const t=(f.getBoundingClientRect().top-sr.top)/k;f.style.maxHeight=Math.max(40,Math.floor(limit-t-6))+'px';});};
 })();

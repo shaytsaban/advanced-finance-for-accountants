@@ -395,3 +395,9 @@ svg.diag{direction:ltr}
 .xl-rib .xl-dec{direction:ltr}
 .memew.mid ol.steps li{font-size:24px;line-height:1.35;padding-top:16px;padding-bottom:16px}
 .memew.mid .meme{width:290px}.memew.mid .meme svg{width:170px;height:170px}
+/* the step explanations and the feedback beside the sheet */
+.qx .qr .xfbs .xl-fb{margin-top:10px;max-height:300px;overflow:auto;font-size:18px;line-height:1.4}
+.qx .qr .xfbs .xl-fb:empty{display:none}
+.qx .qr .xfbs .xl-step,.qx .qr .xfbs .xl-tip{font-size:18px;line-height:1.4}
+.xl-rib .xl-ar{width:9px;height:8px;margin:0 1px;vertical-align:middle}
+.qx .qr .xfbs .xl-fb{max-height:none}
