@@ -19,8 +19,10 @@ function measure(s,i,tag){const foot=s.querySelector('.ft');const limit=foot?720
  s.querySelectorAll('*').forEach(e=>{const xw=e.closest('.xl-wrap,.xfbs .xl-fb');if(xw&&xw!==e)return;/* a box that scrolls inside itself: only the box counts */if(e.closest('.ft')||e.closest('.pd-num')||e.closest('.orb')||e.closest('svg')&&e.tagName!=='svg')return;const c=getComputedStyle(e);if(c.display==='none'||c.visibility==='hidden')return;const r=rel(e);if(r.b-r.t<1)return;if(r.b>worst){worst=r.b;who=e.tagName+'.'+(e.className.baseVal??e.className);}if(r.l<wl)wl=r.l;if(r.r>wr)wr=r.r;});
  if(worst>limit+.5||wl<-.5||wr>1280.5)R.overflow.push({i:i+1,id:s.id,tag,bottom:Math.round(worst),limit,who,l:Math.round(wl),r:Math.round(wr)});}
 const loose=(root,id)=>{const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let t;while((t=w.nextNode())){const p=t.parentElement;if(!p||p.closest('svg,code,.xl-g,.xl-top,script,style'))continue;if(getComputedStyle(p).direction!=='rtl')continue;const v=t.nodeValue;if(/−/.test(v)||/(^|[\s(:])=[A-Za-z(¤$\d]/.test(v))R.loose.push({id,t:v.trim().slice(0,50)});}};
-R.loose=[];
-D.slides.forEach((s,i)=>{D.show(i);D.setAll(s,true);measure(s,i,'open');solveWidgets(s);measure(s,i,'solved');loose(s,s.id);
+R.loose=[];R.pairs=[];
+/* two Latin words with only punctuation between them, inside Hebrew text, swap places on screen (״ב-NPV. PV״ reads as PV first) */
+const pairs=(root,id)=>{const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let t;while((t=w.nextNode())){const p=t.parentElement;if(!p||p.closest('svg,code,.xl-g,.xl-top,.xl-rib,script,style,[dir="ltr"]'))continue;const m=/[A-Za-z][A-Za-z0-9]*[.;:]\s+[A-Za-z]/.exec(t.nodeValue);if(m&&/[\u0590-\u05FF]/.test(p.textContent))R.pairs.push({id,t:t.nodeValue.slice(Math.max(0,m.index-20),m.index+20)});}};
+D.slides.forEach((s,i)=>{D.show(i);D.setAll(s,true);measure(s,i,'open');solveWidgets(s);measure(s,i,'solved');loose(s,s.id);pairs(s,s.id);
  s.querySelectorAll('.eq').forEach(e=>{const box=e.closest('.card,.solw,.cout,.fm,td,.slide');const g=document.createRange();g.selectNodeContents(e);const a=g.getBoundingClientRect(),b=box.getBoundingClientRect();if(a.left<b.left-1||a.right>b.right+1)R.eqwide.push({id:s.id,t:e.textContent.slice(0,50)});});
  const tw=document.createTreeWalker(s,NodeFilter.SHOW_TEXT);let n;const seen={};while((n=tw.nextNode())){if(!n.nodeValue.trim())continue;const p=n.parentElement;if(p.closest('.ft,sup,sub,tspan'))continue;let fs=parseFloat(getComputedStyle(p).fontSize);const svg=p.closest('svg');if(svg){const vb=svg.viewBox.baseVal.width;fs*=svg.getBoundingClientRect().width/(stage.getBoundingClientRect().width/1280)/vb;if(fs<13.5)seen['svg '+fs.toFixed(1)]=n.nodeValue.slice(0,24);}else if(fs<16.5)seen[fs]=n.nodeValue.slice(0,24);}
  if(Object.keys(seen).length)R.small.push({id:s.id,seen});
@@ -127,6 +129,7 @@ print('activities', R['actN'], 'failed', [a for a in R['act'] if not a['ok']])
 print('traps', [(a['id'], a.get('traps')) for a in R['act'] if a['kind'] == 'xl'])
 print('toon overlaps', R['toon'])
 print('loose minus or formula in RTL text', len(R['loose']), R['loose'][:15])
+print('latin pairs that swap in RTL', len(R.get('pairs', [])), R.get('pairs', [])[:15])
 print('mc without a sheet', R['mcNoSheet'])
 print('template build', R['build'])
 print('counts', {k: sum(1 for a in R['act'] if a['kind'] == k) for k in {a['kind'] for a in R['act']}})

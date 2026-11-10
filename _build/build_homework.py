@@ -18,9 +18,13 @@ HW = {
  1: dict(items=['1.1', '1.2', '1.4', '1.5', '1.6', '1.8', '1.9', '1.17', '1.18'],
          topic='אג״ח עם קופון קבוע: שווי בטבלה וב-NPV או ב-PV, פרמיה ונכיון, קופון חצי שנתי ורבעוני והמרת ריבית',
          later='שאר התרגילים בפרק 1 עוסקים באג״ח לשיעורין ובשווי בין מועדי תשלום, ונמצאים בתרגילי הבית של שיעור 2.'),
+ # Shay, 2026-11-10: lesson 2 reached question 3 of its file, sections a and b: amortizing bonds, value right after a payment and between payment dates
  2: dict(items=['1.3', '1.7', '1.10', '1.11', '1.12', '1.13', '1.14', '1.15', '1.16', '1E1', '1E2',
-                '2.1', '2.3', '2.4', '2.6', '2.7', '2.8', '2.9', '2.11', '2.13', '2.15', '2.17', '2E1'],
-         topic='אג״ח לשיעורין ושווי לאורך חיי האג״ח: מיד אחרי קופון, רגע לפני קופון ובין מועדי תשלום',
+                '2.1', '2.3', '2.4', '2.6', '2.8', '2.9', '2.11', '2.15', '2.17', '2E1:אב'],
+         topic='אג״ח לשיעורין, ושווי מיד אחרי תשלום ובין מועדי תשלום',
+         later='תרגילים 2.7 ו-2.13 וסעיפים ג ו-ד בתרגיל בסגנון בחינה 1 בפרק 2 עוסקים בשווי רגע לפני תשלום, ונמצאים בתרגילי הבית של שיעור 3.'),
+ 3: dict(items=['2.7', '2.13', '2E1:גד'],
+         topic='שווי רגע לפני תשלום, ואג״ח שנסחרת בין מועדי תשלום',
          later='תרגילים 2.2, 2.5, 2.10, 2.12, 2.14 ו-2.16 ותרגיל בסגנון בחינה 2 בפרק 2 עוסקים בחילוץ תשואה לפדיון ב-IRR וב-RATE. הם יצורפו לשיעור שבו נלמד הנושא.'),
 }[LESSON]
 # per chapter: pages (0-based) of the exercise file and of the booklet, first..last and the first page of the next chapter
@@ -58,22 +62,23 @@ def content_bottom(page, y0, y1):
 
 
 def pieces(doc, A, key, end_page):
-    """The regions of one item: from its anchor to the next anchor, across pages."""
+    """The regions of one item: from its anchor to the next anchor, across pages. An exam key with sections keeps its story
+    (from the exam header to its first section) and the chosen sections only, wherever they are."""
     k, keep = (key.split(':') + [None])[:2]
     i = next(j for j, a in enumerate(A) if a[0] == k)
     j = i + 1
-    while j < len(A) and A[j][0].startswith('S'):
-        if keep and A[j][0][1] not in keep: break
-        j += 1
-    (_, p0, y0) = A[i]
-    (p1, y1) = (A[j][1], A[j][2]) if j < len(A) else (end_page, TOP)
+    while j < len(A) and A[j][0].startswith('S'): j += 1
+    spans = [(i, j)] if not keep else [(i, i + 1)] + [(x, x + 1) for x in range(i + 1, j) if A[x][0][1] in keep]
     out = []
-    for p in range(p0, p1 + 1):
-        a = y0 if p == p0 else TOP
-        b = y1 if p == p1 else BOT
-        if b - a < 4: continue
-        cb = content_bottom(doc[p], a, b)
-        if cb and cb - a > 4: out.append((p, a, cb))
+    for s0, s1 in spans:
+        (_, p0, y0) = A[s0]
+        (p1, y1) = (A[s1][1], A[s1][2]) if s1 < len(A) else (end_page, TOP)
+        for p in range(p0, p1 + 1):
+            a = y0 if p == p0 else TOP
+            b = y1 if p == p1 else BOT
+            if b - a < 4: continue
+            cb = content_bottom(doc[p], a, b)
+            if cb and cb - a > 4: out.append((p, a, cb))
     return out
 
 
@@ -142,36 +147,59 @@ for c in CH:
 
 
 def block_rows(key):
+    """Row ranges of one item in its chapter sheet: the whole block, or the story and the chosen sections of an exam."""
     k, keep = (key.split(':') + [None])[:2]
     c = int(k[0]); ws0 = WB0[f'שיעור {c}']; st, order = STARTS[c], ORDER[c]
     a = st[k]; i = order.index(k)
     b = st[order[i + 1]] if i + 1 < len(order) else ws0.max_row + 1
-    if keep:
-        for r in range(a, b):
-            v = ws0.cell(r, 1).value
-            if isinstance(v, str) and re.fullmatch(r'סעיף ([אבגד])', v.strip()) and v.strip()[-1] not in keep:
-                b = r; break
-    while b - 1 > a and all(x.value is None for x in ws0[b - 1]): b -= 1
-    return c, a, b
+    def trim(x, y):
+        while y - 1 > x and all(v.value is None for v in ws0[y - 1]): y -= 1
+        return (c, x, y)
+    if not keep: return [trim(a, b)]
+    secs = [(r, ws0.cell(r, 1).value.strip()[-1]) for r in range(a, b) if isinstance(ws0.cell(r, 1).value, str) and re.fullmatch(r'סעיף ([אבגד])', ws0.cell(r, 1).value.strip())]
+    out = [trim(a, secs[0][0])]
+    for n, (r, L) in enumerate(secs):
+        if L in keep: out.append(trim(r, secs[n + 1][0] if n + 1 < len(secs) else b))
+    return out
 
 
 def build_xlsx():
     wb = Workbook(); ws = wb.active; ws.title = f'שיעור {LESSON}'
     ws.sheet_view.rightToLeft = True
     for k, dim in WB0['שיעור 1'].column_dimensions.items(): ws.column_dimensions[k].width = dim.width
-    plan = [(1, 1, 4)] + [block_rows(k) for k in HW['items']]
-    r_out, mapping = 1, []
+    plan = [(1, 1, 4)] + [r for k in HW['items'] for r in block_rows(k)]
+    # a kept section may read rows of a section that was left out: those rows join, in their own place, until nothing is missing
+    def refs_rows(c, a, b):
+        ws0 = WB0[f'שיעור {c}']
+        return {int(m.group(5)) for r in range(a, b) for x in ws0[r] if isinstance(x.value, str) and x.value.startswith('=') for m in REFS.finditer(x.value) if not m.group(1)}
+    while True:
+        have = {(c, r) for c, a, b in plan for r in range(a, b)}
+        miss = {(c, r) for c, a, b in plan for r in refs_rows(c, a, b) if (c, r) not in have}
+        if not miss: break
+        c, r = min(miss)
+        ws0 = WB0[f'שיעור {c}']
+        top = max(x for x in range(1, r + 1) if isinstance(ws0.cell(x, 1).value, str) and re.match(r'(סעיף [אבגד]|תרגיל)', ws0.cell(x, 1).value.strip()))
+        bot = next((x for x in range(r + 1, ws0.max_row + 2) if isinstance(ws0.cell(x, 1).value, str) and re.match(r'(סעיף [אבגד]|תרגיל)', ws0.cell(x, 1).value.strip())), ws0.max_row + 1)
+        plan.append((c, top, bot)); plan.sort(key=lambda t: (t[0], t[1]) if t != (1, 1, 4) else (0, 0))
+    # every copied row gets its new row number; ranges that touch stay together, and a blank row separates items
+    rowmap, r_out, prev = {}, 1, None
     for c, a, b in plan:
-        ws0 = WB0[f'שיעור {c}']; dr = r_out - a
+        if prev and not (prev[0] == c and prev[2] == a): r_out += 1
+        for r in range(a, b): rowmap[(c, r)] = r_out; r_out += 1
+        prev = (c, a, b)
+    mapping = []
+    for c, a, b in plan:
+        ws0 = WB0[f'שיעור {c}']
         for r in range(a, b):
-            if ws0.row_dimensions[r].height: ws.row_dimensions[r + dr].height = ws0.row_dimensions[r].height
+            nr = rowmap[(c, r)]
+            if ws0.row_dimensions[r].height: ws.row_dimensions[nr].height = ws0.row_dimensions[r].height
             for x in ws0[r]:
                 if x.value is None and not x.has_style: continue
-                n = ws.cell(r + dr, x.column)
+                n = ws.cell(nr, x.column)
                 v = x.value
                 if isinstance(v, str) and v.startswith('='):
                     assert '!' not in v, ('a formula reads another sheet', x.coordinate)
-                    v = REFS.sub(lambda m: m.group(1) or f'{m.group(2)}{m.group(3)}{m.group(4)}{int(m.group(5)) + dr}', v)
+                    v = REFS.sub(lambda m: m.group(1) or f'{m.group(2)}{m.group(3)}{m.group(4)}{rowmap[(c, int(m.group(5)))]}', v)
                     mapping.append((c, x.coordinate, n.coordinate))
                 n.value = v
                 if x.has_style:
@@ -179,8 +207,7 @@ def build_xlsx():
                     n.number_format, n.protection = x.number_format, copy.copy(x.protection)
         for mr in ws0.merged_cells.ranges:
             if a <= mr.min_row and mr.max_row < b:
-                ws.merge_cells(start_row=mr.min_row + dr, start_column=mr.min_col, end_row=mr.max_row + dr, end_column=mr.max_col)
-        r_out = b + dr + 1
+                ws.merge_cells(start_row=rowmap[(c, mr.min_row)], start_column=mr.min_col, end_row=rowmap[(c, mr.max_row)], end_column=mr.max_col)
     ws['A1'] = f'פתרונות תרגילי הבית של שיעור {LESSON}: {HW["topic"]}'
     wb.calculation.fullCalcOnLoad = True
     out = os.path.join(OUT, f'solutions-{LESSON}.xlsx'); wb.save(out)

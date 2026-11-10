@@ -6,7 +6,7 @@ COURSE = 'מימון מתקדם לחשבונאים'
 INST = 'המכללה למנהל · מסלול חשבונאות'
 SEM = 'סמסטר א׳ תשפ״ז'
 LESSON = globals().get('LESSON', 1)
-TOTAL_PARTS = {1: 4, 2: 3}[LESSON]
+TOTAL_PARTS = {1: 4, 2: 4, 3: 4}[LESSON]
 # per lesson: deck title, subtitle, chips, cover line and the next meeting. The first meeting date is not in the source files.
 # Shay, 2026-11-03: lesson 1 ended before amortizing bonds. From that slide on, the content is lesson 2.
 LMETA = {
@@ -14,10 +14,14 @@ LMETA = {
          sub='מה קונים כשקונים אג״ח, איך מחשבים את שוויה, ומה משתנה כשהקופון חצי שנתי או רבעוני.', chip='שבעה תרגילים לעבודה עצמית',
          cover='ערך נקוב, ריבית נקובה, שיעור תשואה לפדיון, היוון, NPV ו-PV, פרמיה ונכיון, קופון חצי שנתי ורבעוני והמרת ריבית, ושבעה תרגילים לעבודה עצמית.',
          next_h='אג״ח לשיעורין', next_t='אג״ח שהקרן שלה מוחזרת בחלקים: יתרת ערך נקוב, קופון על היתרה ולוח סילוקין מלא. לפני המפגש: תרגילי הבית של שיעור 1.'),
- 2: dict(date='10.11.2026', h1=('אג״ח לשיעורין', 'ושווי לאורך חיי האג״ח'), title='אג״ח לשיעורין ושווי בין מועדים',
-         sub='כשהקרן מוחזרת בחלקים: לוח סילוקין וקופון על היתרה. ושווי האג״ח מיד אחרי תשלום, רגע לפני תשלום ובין שני מועדי תשלום.', chip='תזכורת לשיעור 1, ושאלות 1 עד 4 מקובץ שיעור 2',
-         cover='אג״ח לשיעורין, יתרת ערך נקוב, לוח סילוקין, קופון על היתרה, שווי מיד אחרי תשלום ורגע לפניו, שווי בין מועדי תשלום, תרגיל בסגנון בחינה ותרגול על כל נושאי האג״ח השקליות.',
-         next_h='חילוץ תשואה לפדיון', next_t='כשהמחיר ידוע והתשואה לא: הפונקציות IRR ו-RATE, גם באג״ח לשיעורין ובין מועדי תשלום. לפני המפגש: תרגילי הבית של שיעור 2.')}[LESSON]
+ 2: dict(date='10.11.2026', h1=('אג״ח לשיעורין', 'ושווי אחרי ההנפקה'), title='אג״ח לשיעורין ושווי אחרי ההנפקה',
+         sub='כשהקרן מוחזרת בחלקים: לוח סילוקין וקופון על היתרה. ושווי האג״ח מיד אחרי תשלום, ובין שני מועדי תשלום.', chip='תזכורת לשיעור 1, ושאלות משני קובצי השיעורים',
+         cover='אג״ח לשיעורין, יתרת ערך נקוב, לוח סילוקין, קופון על היתרה, שווי מיד אחרי תשלום, שווי בין מועדי תשלום, תרגיל בסגנון בחינה ותרגול.',
+         next_h='שווי רגע לפני תשלום, ואג״ח שנסחרת בין מועדים', next_t='ממשיכים בשאלה 3 מקובץ שיעור 2, סעיפים ג ו-ד: שווי מיד אחרי קופון ורגע לפניו. אחר כך אג״ח שנסחרת בין מועדי תשלום. לפני המפגש: תרגילי הבית של שיעור 2.'),
+ 3: dict(date='', h1=('אג״ח:', 'רגע לפני תשלום, ומסחר בין מועדים'), title='רגע לפני תשלום ומסחר בין מועדים',
+         sub='ממשיכים מהנקודה שבה עצרנו בשיעור 2: שווי רגע לפני תשלום ומיד אחריו, ואג״ח שנקנית ביום שבין שני מועדי תשלום.', chip='תזכורת לשיעור 2, ושאלות 2 עד 4 מקובץ שיעור 2',
+         cover='שווי מיד אחרי תשלום ורגע לפניו, שתי דרכים לשווי שלפני התשלום, אג״ח שנסחרת בין מועדי תשלום, ותרשים זרימה לבחירת הכלי.',
+         next_h='חילוץ תשואה לפדיון', next_t='כשהמחיר ידוע והתשואה לא: הפונקציות IRR ו-RATE, גם באג״ח לשיעורין. לפני המפגש: תרגילי הבית של שיעור 3.')}[LESSON]
 XSPECS = []        # every live sheet, in deck order: the practice workbooks are built from these
 SL = []            # every slide, in order
 CUR = [None]       # current part number
@@ -357,7 +361,7 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
     # Shay, 2026-11-10: use the screen. The live sheet shows spare empty rows and columns, as a full Excel window does; the slide fit
     # caps its height to the free space, so it always fills the area under and beside the table. The spec (and the appendix) keep the real size.
     real_w = sum(widths) + max(0, cs - len(widths)) * 92
-    pad_c = max(0, int(((540 if side else 1100) - real_w - 50) // 80))
+    pad_c = max(0, int(((540 if side else 760) - real_w - 50) // 80))
     widths = list(widths) + [92] * max(0, cs - len(widths)) + [80] * pad_c
     cfgd = dict(rows=rs + 14, cols=cs + pad_c, widths=widths, data={k: str(v) for k, v in data.items()}, targets=targets, solution=sol, headRows=head, inputs=[], fmt=fmt, solFmt=fmt,
                 hints=[TX(FXW(x)) for x in (hints or ['קראו שוב את כותרת העמודה, וכתבו את החישוב במילים לפני הנוסחה.'])], remind=TX(FXW(remind or '')), partial=partial or targets[:1], values=values, done=TX(FXW(done)))
@@ -369,6 +373,13 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
     if tol is not None: cfgd['tol'] = tol
     if signMsg: cfgd['signMsg'] = TX(signMsg)
     if inputs: cfgd['vin'] = list(inputs)
+    # Shay, 2026-11-10: a period number may be typed as a date (31.12.2027) instead of 0, 1, 2. The check grades the money, not the labels.
+    def _is_period(a):
+        col, row = re.match(r'([A-Z]+)(\d+)', a).groups()
+        hd = [str(data.get(f'{col}{h}', '')) for h in head if h < int(row)]
+        return bool(hd) and re.match(r'(תקופה|שנה|רבעון|מועד|חודש)', hd[-1].strip()) is not None
+    soft = [a for a in inputs if _is_period(a)]
+    if soft: cfgd['soft'] = soft
     if build:
         # the label cells of each group are held back, and appear one group per click
         bc = [a for cells, _ in build for a in cells]
@@ -467,5 +478,5 @@ def RL(items, start=1):
 
 
 exec(R('content_g.py'))
-for _f in {1: ['content_l1a.py', 'content_l1b.py', 'content_l1c.py'], 2: ['content_l2a.py', 'content_l2b.py', 'content_l2c.py']}[LESSON]:
+for _f in {1: ['content_l1a.py', 'content_l1b.py', 'content_l1c.py'], 2: ['content_l2a.py', 'content_l2b.py', 'content_l2c.py'], 3: ['content_l3a.py', 'content_l3b.py']}[LESSON]:
     exec(R(_f))

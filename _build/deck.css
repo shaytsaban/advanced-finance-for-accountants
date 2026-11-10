@@ -401,3 +401,11 @@ svg.diag{direction:ltr}
 .qx .qr .xfbs .xl-step,.qx .qr .xfbs .xl-tip{font-size:18px;line-height:1.4}
 .xl-rib .xl-ar{width:9px;height:8px;margin:0 1px;vertical-align:middle}
 .qx .qr .xfbs .xl-fb{max-height:none}
+.lsteps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.lstep{background:#fff;border-radius:12px;padding:8px 12px;font-size:17px;line-height:1.35;box-shadow:0 2px 0 var(--line,#d9d2c3)}
+svg .ring{transform-box:fill-box;transform-origin:50% 50%}
+svg .st.show .ring{animation:xlring 1.6s ease-out 1s 2}
+@keyframes xlring{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+@media print{svg .ring{animation:none!important}}
+.lsteps.three{grid-template-columns:repeat(3,1fr)}
+.tbl2.hwt td{font-size:18px;line-height:1.35;padding:8px 12px}.tbl2.hwt td:first-child{font-weight:700;width:26%}.tbl2.hwt td:last-child{width:18%;color:#5d6a86}

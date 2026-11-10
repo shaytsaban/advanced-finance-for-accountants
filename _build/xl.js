@@ -218,7 +218,8 @@ function mount(host,cfg){
  function colourise(inp,ov){const v=inp.value,fs=refsOf(v);
   if(!fs.length||inp.scrollWidth>inp.clientWidth+1){ov.innerHTML='';inp.classList.remove('xl-clr');return;}
   let h='',k=0;fs.forEach(f=>{h+=esc(v.slice(k,f.i))+`<span style="color:${f.c}">${esc(f.t)}</span>`;k=f.i+f.t.length;});h+=esc(v.slice(k));
-  ov.innerHTML=h;ov.style.direction=getComputedStyle(inp).direction;inp.classList.add('xl-clr');}
+  /* the coloured copy must lie exactly over the typed text: same font, size, spacing and padding, or a click lands on another character */
+  const cs=getComputedStyle(inp);ov.innerHTML=h;Object.assign(ov.style,{direction:cs.direction,font:cs.font,letterSpacing:cs.letterSpacing,paddingLeft:cs.paddingLeft,paddingRight:cs.paddingRight,textAlign:cs.textAlign,justifyContent:cs.textAlign==='right'||cs.textAlign==='end'&&cs.direction==='ltr'?'flex-end':'flex-start'});inp.classList.add('xl-clr');}
  const barOv=document.createElement('div');barOv.className='xl-ov xl-bov';bar.parentNode.insertBefore(barOv,bar);
  function sync(){const inp=curInput();if(!inp)return;if(inp!==bar)bar.value=inp.value;else{const el=td(editing.a).querySelector('input');if(el)el.value=bar.value;}
   const ci=td(editing.a).querySelector('input');if(ci){fitEditor(ci);colourise(ci,ci.previousSibling);}Object.assign(barOv.style,{left:bar.offsetLeft+'px',top:bar.offsetTop+'px',width:bar.offsetWidth+'px',height:bar.offsetHeight+'px'});colourise(bar,barOv);barOv.scrollLeft=bar.scrollLeft;paintRefs();}
@@ -232,7 +233,9 @@ function mount(host,cfg){
  function startEdit(initial,keep,mode){const a=addr(sel.r,sel.c);sel2={...sel};editing={a,where:'cell',orig:S.raw[a]||'',mode:mode||(keep?'edit':'enter'),ptr:null};const el=td(a);
   el.className+=' ed';el.innerHTML=`<div class="xl-ed"><div class="xl-ov" aria-hidden="true"></div><input class="xl-in" dir="auto" spellcheck="false" autocomplete="off"></div>`;const inp=el.querySelector('input');inp.value=keep?(S.raw[a]||''):initial;
   inp.focus({preventScroll:true});inp.setSelectionRange(inp.value.length,inp.value.length);
-  inp.oninput=()=>{if(editing){editing.ptr=null;}sync();};inp.onkeydown=keyEdit;inp.onkeyup=inp.onclick=()=>sync();sync();modeTip();}
+  inp.oninput=()=>{if(editing){editing.ptr=null;}sync();};inp.onkeydown=keyEdit;inp.onkeyup=inp.onclick=()=>sync();
+  /* a click inside the cell being typed switches to Edit mode, as in Excel: the arrows then move the caret, and the click places it */
+  inp.addEventListener('pointerdown',e=>{e.stopPropagation();if(editing&&editing.mode!=='edit'){editing.mode='edit';editing.ptr=null;modeTip();}});sync();modeTip();}
  function modeTip(){if(editing)toastX(editing.mode==='edit'?'מצב עריכה (F2): החצים מזיזים את הסמן':'מצב הזנה: אחרי אופרטור, החצים בוחרים תא');}
  function curInput(){return editing?(editing.where==='bar'?bar:td(editing.a).querySelector('input')):null;}
  function endEdit(){editing=null;barOv.innerHTML='';bar.classList.remove('xl-clr');g.querySelectorAll('td[data-rf]').forEach(el=>{el.style.boxShadow='';el.style.backgroundColor='';el.classList.remove('ptr');delete el.dataset.rf;});}
@@ -371,6 +374,8 @@ function mount(host,cfg){
    const lits=s=>(s.replace(/\$?[A-Za-z]{1,2}\$?\d+/g,' ').match(/\d+(\.\d+)?/g)||[]).map(Number);
    const allowed=new Set([...lits(sf),...(cfg.allow||[0,1])]);let why='';
    const tol=w=>cfg.tol!=null?cfg.tol:Math.max(1e-6,1e-9*Math.abs(w));const near=(x,w)=>typeof x==='number'&&typeof w==='number'&&Math.abs(x-w)<=tol(w);
+   /* the period column is a label (0, 1, 2 or the payment date): whatever is written there, it is never an error, and it counts as done */
+   if(cfg.soft&&cfg.soft.includes(a)){marks[a]=raw?'ok':'';ok++;return;}
    if(cfg.vin&&cfg.vin.includes(a)){const pc=/^pct/.test(cfg.fmt&&cfg.fmt[a]||'');let w='';
     if(!raw)w='ריק: הזינו את הנתון מהשאלה';else if(isErr(got))w=`שגיאה ${got.err}`;
     else if(!near(got,want))w=pc&&near(got/100,want)?'זה אחוז: כתבו אותו עם סימן האחוז, למשל 5%':pc&&near(got*100,want)?'האחוז קטן פי 100 מהנדרש. כתבו את האחוז כפי שהוא בשאלה, למשל 5%':'הערך אינו תואם את הנתון בשאלה. קראו שוב את השאלה';
