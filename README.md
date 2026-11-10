@@ -3,7 +3,7 @@
 אתר הקורס: https://shaytsaban.github.io/advanced-finance-for-accountants/
 
 - `index.html`: דף הבית.
-- `lectures/lecture-N/`: מצגת, סיכום PDF, ותרגילי הבית של השיעור עם הפתרונות (`exercises-N.pdf`, `solutions-N.pdf`, `solutions-N.xlsx`).
+- `lectures/lecture-N/` (שיעורים 1 עד 3): מצגת, סיכום PDF, ותרגילי הבית של השיעור עם הפתרונות (`exercises-N.pdf`, `solutions-N.pdf`, `solutions-N.xlsx`).
 - `materials/`: סילבוס, קובץ התרגילים המלא וחוברת הפתרונות (PDF ו-Excel), ואקסל תרגילי השיעור (`lesson-N-appendix.xlsx`).
 - שיעור 1 הסתיים לפני אג״ח לשיעורין, ולכן הנושא פותח את שיעור 2. תרגילי הבית נחתכים מפרק 1 לפי מה שנלמד בכל שיעור.
 - `_build/`: מקורות הבנייה.
