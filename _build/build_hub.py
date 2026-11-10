@@ -1,5 +1,7 @@
 # Course hub. Run: python3 build_hub.py  ->  ../index.html
-import os, re
+import os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from booklet_plan import RELAID as BK, span as BKSPAN
 H = os.path.dirname(os.path.abspath(__file__))
 n = lambda s: f'<span class="n">{s}</span>'
 UP = [(2, 'אג״ח לשיעורין, ומחיר לפי תאריכים, לפני ואחרי קופון'), (3, 'חילוץ תשואה לפדיון ותשואה לתקופת החזקה'), (4, 'מלווה קצר מועד (מק״מ), אג״ח צמיתה ומשמעות משך החיים הממוצע (מח״מ)'), (5, 'אג״ח צמודות למדד ולדולר'), (6, 'תמחור מניות: מודל הדיבידנדים, תשואת דיבידנד ומכפיל רווח'), (7, 'תמחור מניות: הזדמנויות צמיחה, מכפיל ענפי ודיבידנד רבעוני'), (8, 'מחיר ההון של החברה: ביטא ומחיר הון ממוצע משוקלל'), ('9 ו-10', 'מינוף פיננסי: מודיליאני ומילר, בלי מסים ועם מסים'), (11, 'חכירה לעומת רכישה')]
@@ -11,17 +13,15 @@ LESSONS = [
  dict(k=1, date='3.11.2026', rec='https://youtu.be/DHylIX0bqH0', h='אג״ח שקליות: שווי, ריבית נקובה ותשואה לפדיון',
       learn=['אגרת חוב (אג״ח): ערך נקוב, ריבית נקובה, קופון ומועד פדיון', 'שיעור תשואה לפדיון (YTM), רציונל ותהליך התמחור', 'שווי אג״ח בטבלת תזרימים ובפונקציות NPV ו-PV, ומוסכמת הסימן',
              'פרמיה, נכיון ופארי, וקופון חצי שנתי ורבעוני', 'שבעה תרגילים חדשים לעבודה עצמית, עם רמזים ופתרון'],
-      hw=f'מפרק {n(1)}: תרגילים ' + ', '.join(n(x) for x in ['1.1', '1.2', '1.4', '1.5', '1.6', '1.8', '1.9', '1.17']) + ' ו-' + n('1.18'), hwnote=f'שאר תרגילי פרק {n(1)} עוסקים באג״ח לשיעורין ובשווי בין מועדי תשלום, ונמצאים בתרגילי הבית של שיעור {n(2)}.'),
+      ),
  dict(k=2, date='10.11.2026', h='אג״ח לשיעורין ושווי אחרי ההנפקה',
       learn=['תזכורת קצרה לשיעור 1', 'אג״ח לשיעורין ויתרת ערך נקוב: הקופון מחושב על היתרה בתחילת התקופה', 'לוח סילוקין מלא בגיליון, ושווי ב-NPV, גם בקופון חצי שנתי ורבעוני',
              'שווי מיד אחרי תשלום, ושווי בין מועדי תשלום: NPV ודחיפה קדימה לפי חודשים', 'תרגול עצמי מהקל אל הכבד, עם רמזים ופתרון בשלבים'],
-      hw=f'מפרק {n(1)}: תרגילים {n("1.3")}, {n("1.7")}, {n("1.10")} עד {n("1.16")} ושני התרגילים בסגנון בחינה. מפרק {n(2)}: תרגילים ' + ', '.join(n(x) for x in ['2.1', '2.3', '2.4', '2.6', '2.8', '2.9', '2.11', '2.15']) + f' ו-{n("2.17")}, ותרגיל בסגנון בחינה {n(1)}, סעיפים א ו-ב',
-      hwnote=f'תרגילים {n("2.7")} ו-{n("2.13")} וסעיפים ג ו-ד בתרגיל בסגנון בחינה {n(1)} בפרק {n(2)} עוסקים בשווי רגע לפני תשלום, ונמצאים בתרגילי הבית של שיעור {n(3)}.'),
+      ),
  dict(k=3, h='שווי לפני תשלום, מסחר בין מועדים וחילוץ תשואה',
       learn=['תזכורת קצרה לשיעור 2, וממשיכים מהשאלה שבה עצרנו: שאלה 3 מקובץ שיעור 2, סעיפים ג ו-ד', 'שווי רגע לפני תשלום: שתי דרכים לאותה תוצאה', 'אג״ח שנקנית ביום שבין שני מועדי תשלום',
              'חילוץ תשואה לפדיון: הפונקציות IRR ו-RATE, והמרה לתשואה שנתית בחזקה', 'חילוץ תשואה באג״ח לשיעורין, ותרגול עצמי'],
-      hw=f'מפרק {n(2)}: תרגילים {n("2.2")}, {n("2.5")}, {n("2.7")}, {n("2.10")}, {n("2.12")} ו-{n("2.13")}, תרגיל בסגנון בחינה {n(1)}, סעיפים ג ו-ד, ותרגיל בסגנון בחינה {n(2)}, סעיפים א ו-ב',
-      hwnote=f'תרגילים {n("2.14")} ו-{n("2.16")} וסעיפים ג ו-ד בתרגיל בסגנון בחינה {n(2)} עוסקים בחילוץ תשואה בין מועדי תשלום, ויצורפו אחרי שהנושא יילמד.'),
+      ),
 ]
 
 
@@ -30,6 +30,10 @@ def card(L):
     D = open(os.path.join(H, '..', 'lectures', f'lecture-{k}', 'presentation.html'), encoding='utf8').read()
     NS, NX = D.count('<section class="slide'), D.count('act xlq')
     learn = ''.join(f'<li>{x}</li>' for x in L['learn'])
+    e = len(BK[k]['exams'])
+    nums = re.sub(r'(\d+\.\d+)', lambda m: n(m.group(1)), BKSPAN(k))
+    L['hw'] = f'פרק {n(k)} בקובץ התרגילים: תרגילים {nums}' + ('' if not e else (', ותרגיל אחד בסגנון בחינה' if e == 1 else f', ו-{n(e)} תרגילים בסגנון בחינה'))
+    L['hwnote'] = f'הקובץ כולל רק את התרגילים של שיעור {n(k)}, מסודרים לפי נושא. אין צורך לחפש תרגילים בפרקים אחרים.'
     yid = L['rec'].rstrip('/').split('/')[-1] if L.get('rec') else ''
     rec = (f'<div class="rec" id="recording-{k}"><h4>🎥 הקלטת השיעור · {n(L["date"])}</h4><div class="recbox">'
            f'<iframe src="https://www.youtube.com/embed/{yid}" title="הקלטת שיעור {k}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>'
@@ -49,8 +53,8 @@ def card(L):
 <a class="lk s" href="lectures/lecture-{k}/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת במסמך אחד: הגדרות, השאלות והפתרון שלהן בגיליון, ומילון מושגים.</span></span></a>
 </div></div>
 <div class="grp"><h5>3. תרגילי בית</h5><div class="links">
-<a class="lk p" href="lectures/lecture-{k}/exercises-{k}.pdf" target="_blank" rel="noopener"><span class="e">📝</span><span><b>תרגילי הבית (PDF)</b><span class="d">מקובץ התרגילים, {L['hw']}.</span></span></a>
-<a class="lk r" href="lectures/lecture-{k}/solutions-{k}.pdf" target="_blank" rel="noopener"><span class="e">✅</span><span><b>פתרונות תרגילי הבית (PDF)</b><span class="d">הפתרונות של אותם תרגילים מחוברת הפתרונות, שלב אחר שלב. פותחים רק אחרי שפותרים.</span></span></a>
+<a class="lk p" href="lectures/lecture-{k}/exercises-{k}.pdf" target="_blank" rel="noopener"><span class="e">📝</span><span><b>תרגילי הבית (PDF)</b><span class="d">{L['hw']}. רק התרגילים של השיעור הזה.</span></span></a>
+<a class="lk r" href="lectures/lecture-{k}/solutions-{k}.pdf" target="_blank" rel="noopener"><span class="e">✅</span><span><b>פתרונות תרגילי הבית (PDF)</b><span class="d">פרק {n(k)} בחוברת הפתרונות, באותו מספור, שלב אחר שלב. פותחים רק אחרי שפותרים.</span></span></a>
 <a class="lk x" href="lectures/lecture-{k}/solutions-{k}.xlsx" download><span class="e">📊</span><span><b>פתרונות תרגילי הבית (Excel)</b><span class="d">אותם פתרונות בנוסחאות חיות.</span></span></a>
 </div></div>
 </div>
@@ -144,11 +148,11 @@ page = f'''<!doctype html>
 <h2 class="sec">קובצי הקורס</h2>
 <div class="cgrid">
 <a class="lk s" href="materials/syllabus.pdf" target="_blank" rel="noopener"><span class="e">📋</span><span><b>סילבוס הקורס (PDF)</b><span class="d">{n(11)} נושאים, לפי סדר קובצי השיעורים. מועדי המפגשים והרכב הציון יעודכנו.</span></span></a>
-<a class="lk p" href="materials/afm-exercises.pdf" target="_blank" rel="noopener"><span class="e">📚</span><span><b>קובץ התרגילים המלא (PDF)</b><span class="d">פרק לכל שיעור, עם תרגילים, תרגילים מאתגרים ותרגילים בסגנון בחינה. מכאן תרגילי הבית.</span></span></a>
+<a class="lk p" href="materials/afm-exercises.pdf" target="_blank" rel="noopener"><span class="e">📚</span><span><b>קובץ התרגילים המלא (PDF)</b><span class="d">בנוי לפי השיעורים כפי שנלמדו: פרק לכל שיעור, ובו בדיוק תרגילי הבית של אותו שיעור.</span></span></a>
 <a class="lk r" href="materials/afm-solutions.pdf" target="_blank" rel="noopener"><span class="e">✅</span><span><b>חוברת הפתרונות המלאה (PDF)</b><span class="d">פתרון מפורט לכל תרגיל בקובץ התרגילים, באותו סדר ומספור.</span></span></a>
 <a class="lk x" href="materials/afm-solutions.xlsx" download><span class="e">📊</span><span><b>פתרונות קובץ התרגילים (Excel)</b><span class="d">אותם פתרונות בנוסחאות חיות, גיליון לכל שיעור.</span></span></a>
 </div>
-<p class="cnote">בכרטיס של כל שיעור למטה מופיעים רק התרגילים שמתאימים למה שנלמד באותו שיעור, עם הפתרונות שלהם.</p>
+<p class="cnote">בכרטיס של כל שיעור למטה מופיע הפרק של אותו שיעור כקובץ נפרד וקצר, עם הפתרונות שלו. הקובץ המלא מתעדכן אחרי כל שיעור, לפי ההספק בפועל.</p>
 </section>
 <section class="block">
 <h2 class="sec">השיעורים</h2>

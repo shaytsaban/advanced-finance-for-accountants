@@ -1,6 +1,7 @@
 # Lesson content, shared by the deck and the summary. Executed with MODE = 'deck' or 'pdf'.
 from lib import *
 import json, html as _html
+from booklet_plan import EXN, RELAID as BK, span as BKSPAN
 
 COURSE = 'מימון מתקדם לחשבונאים'
 INST = 'המכללה למנהל · מסלול חשבונאות'
@@ -396,6 +397,19 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
     if side:
         return cfgd, f'<div class="tasktxt sm">{TX(task)}</div><div class="sheet"></div>{extra}'
     return cfgd, f'<div class="tasktxt">{TX(task)}</div><div class="xlrow{"" if chart else " solo"}"><div class="sheet"></div><div class="xlside">{sv}</div></div>{extra}'
+
+
+def HWSLIDE(c, where, extra=None):
+    """The homework slide of lesson c: its chapter of the exercise file, by topic, in the booklet's own numbers (booklet_plan.py)."""
+    P = BK[c]; e = len(P['exams'])
+    rows = [[g, 'תרגילים ' + BKSPAN(c, g) if len(it) > 1 else 'תרגיל ' + BKSPAN(c, g), w] for (g, it), w in zip(P['groups'], where)]
+    if e: rows.append(['תרגילים בסגנון בחינה', 'תרגיל 1' if e == 1 else ('תרגילים 1 ו-2' if e == 2 else f'תרגילים 1 עד {e}'), 'כל השיעור'])
+    steps = [f'פותחים את הקובץ ״תרגילי הבית״ בכרטיס של שיעור {c} באתר. זה פרק {c} בקובץ התרגילים, ואין בו תרגילים אחרים.',
+             'פותרים כל תרגיל ב-Excel, לפי הסדר, ורק אחר כך בוחרים תשובה.', 'בודקים בקובץ ״פתרונות תרגילי הבית״ רק אחרי שפתרתם. המספור זהה.'] + (extra or [])
+    S('s-home', 'מה עושים בבית', f'מה עושים בבית: פרק {c} בקובץ התרגילים',
+      '<p class="lead">' + TX(f'תרגילי הבית של שיעור {c} הם כל פרק {c} בקובץ התרגילים: תרגילים {BKSPAN(c)}' + ('' if not e else (', ותרגיל אחד בסגנון בחינה' if e == 1 else f', ו-{e} תרגילים בסגנון בחינה')) + '.') + '</p>'
+      + TABLE(['הנושא שלמדנו', 'התרגילים, לפי הסדר', 'היכן למדנו'], rows, cls='hwt')
+      + '<div class="card hwsteps" style="margin-top:10px"><b class="ct">איך עובדים</b><ol class="lg">' + ''.join('<li>' + TX(x) + '</li>' for x in steps) + '</ol></div>', kick=f'חלק {CUR[0]} · לבית')
 
 
 def XLS(sid, title, h, task, data, sol, widths, head, **kw):

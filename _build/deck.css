@@ -409,3 +409,4 @@ svg .st.show .ring{animation:xlring 1.6s ease-out 1s 2}
 @media print{svg .ring{animation:none!important}}
 .lsteps.three{grid-template-columns:repeat(3,1fr)}
 .tbl2.hwt td{font-size:18px;line-height:1.35;padding:8px 12px}.tbl2.hwt td:first-child{font-weight:700;width:26%}.tbl2.hwt td:last-child{width:18%;color:#5d6a86}
+.hwsteps ol.lg li{font-size:19px;line-height:1.35;margin-bottom:3px}
