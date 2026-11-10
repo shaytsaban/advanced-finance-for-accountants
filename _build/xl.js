@@ -65,7 +65,7 @@ const FIN=(function(){
  return {PV,FV,PMT,NPER,RATE,NPV,IRR,XNPV,XIRR,DATE,ROUND};})();
 
 /* ---------- a sheet ---------- */
-function Sheet(rows,cols){this.rows=rows;this.cols=cols;this.raw={};this.fmt={};this.val={};}
+function Sheet(rows,cols){this.rows=rows;this.cols=cols;this.raw={};this.fmt={};this.sty={};this.val={};}
 Sheet.prototype.set=function(a,raw){if(raw===''||raw==null)delete this.raw[a];else this.raw[a]=String(raw);};
 Sheet.prototype.recalc=function(){const S=this,memo={},busy={};
  function cellv(a){if(a in memo)return memo[a];const pa=parseAddr(a);if(!pa||pa.r>=S.rows||pa.c>=S.cols&&pa.c>25)return ERR('#REF!');
@@ -122,7 +122,7 @@ function shift(raw,dr,dc){if(!raw||raw[0]!=='=')return raw;
  return '='+raw.slice(1).replace(/("[^"]*")|(\$?)([A-Za-z]{1,2})(\$?)(\d+)(?![\d(A-Za-z])/g,(m,str,d1,L,d2,R)=>{if(str)return str;
   let c=colIdx(L.toUpperCase()),r=+R-1;if(!d1)c+=dc;if(!d2)r+=dr;if(c<0||r<0)return '#REF!';return d1+colName(c)+d2+(r+1);});}
 
-const fmtNum=(v,f)=>{if(f==='gen')f='';const fd=/^(pct|num)(\d)$/.exec(f||'');if(fd){const d=+fd[2];const x=fd[1]==='pct'?v*100:v;const t=x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}).replace('-','−');return fd[1]==='pct'?t+'%':t;}
+const fmtNum=(v,f)=>{if(f==='gen')f='';const cu=/^cur(\d)$/.exec(f||'');if(cu){const t=Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:+cu[1],maximumFractionDigits:+cu[1]});return (v<0?'−':'')+'₪'+t;}const fd=/^(pct|num)(\d)$/.exec(f||'');if(fd){const d=+fd[2];const x=fd[1]==='pct'?v*100:v;const t=x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}).replace('-','−');return fd[1]==='pct'?t+'%':t;}
  if(f==='pct'){const x=Math.round(v*100*100)/100;return x+'%';}
  if(Math.abs(v)>=1e11)return v.toExponential(4);const x=Math.round(v*1e6)/1e6;
  return x.toLocaleString('en-US',{maximumFractionDigits:2}).replace('-','−');};
@@ -138,10 +138,10 @@ function mount(host,cfg){
  const BL=cfg.build||[];let bk=0;
  const baseNow=()=>{const d={...cfg.data};BL.slice(0,bk).forEach(st=>st.cells.forEach(a=>{d[a]=cfg.bdata[a];}));return d;};
  let base=baseNow();
- const load=()=>{base=baseNow();S.raw={};S.fmt={...(cfg.fmt||{})};Object.entries(base).forEach(([a,v])=>S.set(a,v));S.recalc();};load();
+ const load=()=>{base=baseNow();S.raw={};S.sty={};S.fmt={...(cfg.fmt||{})};Object.entries(base).forEach(([a,v])=>S.set(a,v));S.recalc();};load();
  const W=cfg.widths||[];
  host.classList.add('xl');
- host.innerHTML=`<div class="xl-top"><div class="xl-name" title="תיבת השם">A1</div><div class="xl-fx">fx</div><input class="xl-bar" dir="auto" spellcheck="false" autocomplete="off"></div>
+ host.innerHTML=`<div class="xl-rib" role="toolbar" aria-label="רצועת הכלים: בית"><span class="xl-grp"><button data-r="undo" title="ביטול (Ctrl+Z)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3.5 2.5 6.5l3 3M3 6.5h6.5a4 4 0 0 1 0 8H7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button><button data-r="redo" title="ביצוע חוזר (Ctrl+Y)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 3.5l3 3-3 3M13 6.5H6.5a4 4 0 0 0 0 8H9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button></span><span class="xl-grp"><button data-r="b" title="מודגש (Ctrl+B)"><b>B</b></button><button data-r="i" title="נטוי (Ctrl+I)"><i>I</i></button><button data-r="u" title="קו תחתון (Ctrl+U)"><u>U</u></button><button data-r="fill" title="צבע מילוי"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 9l5-5 4 4-5 5z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M12.5 10.5c0 1.2.9 2 .9 2.6a.9.9 0 0 1-1.8 0c0-.6.9-1.4.9-2.6z" fill="currentColor"/><rect x="1.5" y="14" width="13" height="2" fill="#ffd34d"/></svg></button></span><span class="xl-grp"><button data-r="al-right" title="יישור לימין"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12M6 6.5h8M2 10h12M6 13.5h8" stroke="currentColor" stroke-width="1.6"/></svg></button><button data-r="al-center" title="מרכז"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12M4 6.5h8M2 10h12M4 13.5h8" stroke="currentColor" stroke-width="1.6"/></svg></button><button data-r="al-left" title="יישור לשמאל"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12M2 6.5h8M2 10h12M2 13.5h8" stroke="currentColor" stroke-width="1.6"/></svg></button></span><span class="xl-grp"><select data-r="nf" title="תבנית מספר"><option value="gen">כללי</option><option value="num">מספר</option><option value="cur">מטבע</option><option value="pct">אחוזים</option></select><button data-r="cur" title="תבנית מטבע">₪</button><button data-r="pct" title="סגנון אחוזים (Ctrl+Shift+%)">%</button><button data-r="comma" title="סגנון פסיק">,</button><button data-r="dec+" title="הגדלת מקומות עשרוניים" class="xl-dec"><span dir="ltr">.0<sub>→</sub>.00</span></button><button data-r="dec-" title="הקטנת מקומות עשרוניים" class="xl-dec"><span dir="ltr">.00<sub>→</sub>.0</span></button></span></div><div class="xl-top"><div class="xl-name" title="תיבת השם">A1</div><div class="xl-fx">fx</div><input class="xl-bar" dir="auto" spellcheck="false" autocomplete="off"></div>
   <div class="xl-tools">${cfg.tools===false?'':`<button data-x="formulas" title="הצגת נוסחאות">נוסחאות</button>`}${cfg.targets?`<button data-x="check" class="xl-go">✔ בדיקה</button>${cfg.steps?'<button data-x="step" class="xl-st">▶ צעד אחר צעד</button>':''}${cfg.hints?'<button data-x="hint">💡 רמז</button>':''}${cfg.remind?'<button data-x="remind">📐 תזכורת נוסחה</button>':''}${cfg.partial?'<button data-x="part">פתרון חלקי</button>':''}<button data-x="solve">פתרון מלא</button>`:''}<button data-x="reset">איפוס</button><span class="xl-msg"></span></div>
   <div class="xl-wrap"${cfg.maxh?` style="max-height:${cfg.maxh}px"`:''}><table class="xl-g" tabindex="0"><thead><tr><th class="xl-c0"></th>${Array.from({length:C},(_,c)=>`<th style="width:${W[c]||92}px">${colName(c)}</th>`).join('')}</tr></thead><tbody>${Array.from({length:R-R0},(_,k)=>k+R0).map(r=>`<tr><th class="xl-rn">${r+1}</th>${Array.from({length:C},(_,c)=>`<td data-a="${addr(r,c)}"></td>`).join('')}</tr>`).join('')}</tbody></table></div>
   ${cfg.targets?'<div class="xl-fb"></div>':''}`;
@@ -153,6 +153,35 @@ function mount(host,cfg){
  const td=a=>g.querySelector(`td[data-a="${a}"]`);
  const setFb=h=>{if(!fb)return;fb.innerHTML=h;if(cfg.onFb)cfg.onFb();};
  let sel={r:R0,c:0},sel2={r:R0,c:0},editing=null,showF=false,marks={},hintN=0;
+ /* ---------- the Home ribbon, as in Excel: undo, font, fill, alignment and number format ---------- */
+ const UNDO=[],REDO=[];let lastSt=null,undoing=false;
+ const state=()=>JSON.stringify([S.raw,S.fmt,S.sty]);
+ function snap(){const st=state();if(st===lastSt)return;if(lastSt!==null&&!undoing){UNDO.push(lastSt);if(UNDO.length>100)UNDO.shift();REDO.length=0;}lastSt=st;undoing=false;}
+ function restore(st){const [r,f,y]=JSON.parse(st);S.raw=r;S.fmt=f;S.sty=y;undoing=true;render();if(cfg.onChange)cfg.onChange();}
+ function undo(){if(!UNDO.length)return;REDO.push(lastSt);const st=UNDO.pop();lastSt=st;restore(st);}
+ function redo(){if(!REDO.length)return;UNDO.push(lastSt);const st=REDO.pop();lastSt=st;restore(st);}
+ const eachSel=fn=>{for(let r=Math.min(sel.r,sel2.r);r<=Math.max(sel.r,sel2.r);r++)for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++)fn(addr(r,c));};
+ const sty=a=>S.sty[a]||(S.sty[a]={});
+ function toggleSty(k,v){const a0=addr(sel.r,sel.c),on=(S.sty[a0]||{})[k]===v;eachSel(a=>{const y=sty(a);if(on)delete y[k];else y[k]=v;if(!Object.keys(y).length)delete S.sty[a];});render();}
+ /* the decimals a cell shows now, read from its format or, in General, from what it displays */
+ function kindDec(a){const f=S.fmt[a]||'';const m=/^(pct|num|cur)(\d)$/.exec(f);if(m)return [m[1],+m[2]];
+  const raw=S.raw[a]||'';const t=display(S,a).t||'';const k=(f==='pct'||(!f&&raw[0]!=='='&&raw.includes('%')))?'pct':'num';const dm=/\.(\d+)/.exec(t);return [k,dm?dm[1].length:0];}
+ function numFmt(x){eachSel(a=>{const [k,d]=kindDec(a);
+   if(x==='pct')S.fmt[a]='pct0';else if(x==='comma')S.fmt[a]='num2';else if(x==='cur')S.fmt[a]='cur2';
+   else if(x==='dec+')S.fmt[a]=k+Math.min(6,d+1);else if(x==='dec-')S.fmt[a]=k+Math.max(0,d-1);
+   else if(x==='gen')delete S.fmt[a];else if(x==='num')S.fmt[a]='num2';});render();}
+ function ribState(){const rb=host.querySelector('.xl-rib');if(!rb)return;const a=addr(sel.r,sel.c),y=S.sty[a]||{};
+  ['b','i','u'].forEach(k=>rb.querySelector(`[data-r="${k}"]`).classList.toggle('on',!!y[k]));
+  ['right','center','left'].forEach(k=>rb.querySelector(`[data-r="al-${k}"]`).classList.toggle('on',y.al===k));
+  rb.querySelector('[data-r="fill"]').classList.toggle('on',!!y.fill);
+  const f=S.fmt[a]||'',nf=rb.querySelector('[data-r="nf"]');nf.value=/^pct/.test(f)?'pct':/^cur/.test(f)?'cur':/^num/.test(f)?'num':'gen';
+  rb.querySelector('[data-r="undo"]').disabled=!UNDO.length;rb.querySelector('[data-r="redo"]').disabled=!REDO.length;}
+ function ribDo(x){if(editing)commit(0,0);
+  if(x==='undo')return undo();if(x==='redo')return redo();
+  if(x==='b'||x==='i'||x==='u')return toggleSty(x,true);
+  if(x==='fill')return toggleSty('fill','#fff2cc');
+  if(x.startsWith('al-'))return toggleSty('al',x.slice(3));
+  numFmt(x);}
  const inSel=(r,c)=>r>=Math.min(sel.r,sel2.r)&&r<=Math.max(sel.r,sel2.r)&&c>=Math.min(sel.c,sel2.c)&&c<=Math.max(sel.c,sel2.c);
  const selName=()=>sel.r===sel2.r&&sel.c===sel2.c?addr(sel.r,sel.c):addr(Math.min(sel.r,sel2.r),Math.min(sel.c,sel2.c))+':'+addr(Math.max(sel.r,sel2.r),Math.max(sel.c,sel2.c));
  function render(){S.recalc();
@@ -161,10 +190,12 @@ function mount(host,cfg){
    el.className=(d.n?'n':'')+(d.f?' f':'')+(d.e?' e':'')+(inSel(p.r,p.c)?' sel':'')+(p.r===sel.r&&p.c===sel.c?' act':'')+(cfg.inputs&&cfg.inputs.includes(a)?' in':'')+(cfg.targets&&cfg.targets.includes(a)?' tg':'')+(marks[a]?' '+marks[a]:'')+(cfg.headRows&&cfg.headRows.includes(p.r+1)?' hd':'');
    /* freeze the table's header row in a scrolling sheet, like Freeze Panes */
    if(cfg.maxh&&cfg.headRows&&cfg.headRows.length&&p.r+1===cfg.headRows[0]){el.classList.add('frz');el.style.top=g.tHead.offsetHeight+'px';const rn=el.parentElement.firstElementChild;rn.classList.add('frz');rn.style.top=el.style.top;}
+   const sy=S.sty[a]||{};el.style.fontWeight=sy.b?'700':'';el.style.fontStyle=sy.i?'italic':'';el.style.textDecoration=sy.u?'underline':'';el.style.textAlign=sy.al||'';el.style.backgroundImage=sy.fill?`linear-gradient(${sy.fill},${sy.fill})`:'';
    el.innerHTML=(d.n||d.f?`<span dir="ltr">${esc(d.t)}</span>`:esc(d.t))+(p.r===Math.max(sel.r,sel2.r)&&p.c===Math.max(sel.c,sel2.c)&&!editing?'<i class="xl-fh"></i>':'');});
   const ae=td(addr(sel.r,sel.c));if(ae&&cfg.maxh)keepVisible(ae);
   g.querySelectorAll('th.hs').forEach(x=>x.classList.remove('hs'));const hr=g.tHead.rows[0].cells;for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++)hr[c+1].classList.add('hs');
   g.querySelectorAll('tbody th.xl-rn').forEach(th=>{const r=+th.textContent-1;if(r>=Math.min(sel.r,sel2.r)&&r<=Math.max(sel.r,sel2.r))th.classList.add('hs');});
+  snap();ribState();
   nameB.textContent=selName();if(!editing||editing.where!=='bar')bar.value=S.raw[addr(sel.r,sel.c)]||'';
   if(cfg.onSelect)cfg.onSelect(selName());}
  /* ---------- editing, as in Excel: Enter mode (typing) and Edit mode (F2 or double click); references are coloured while a formula is written ---------- */
@@ -278,6 +309,18 @@ function mount(host,cfg){
    for(let r=Math.min(sel.r,sel2.r);r<=Math.max(sel.r,sel2.r);r++)for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++){S.set(addr(r,c),shift(CLIP.raw,r-CLIP.r,c-CLIP.c));if(CLIP.fmt)S.fmt[addr(r,c)]=CLIP.fmt;}
    render();if(cfg.onChange)cfg.onChange();return;}
   if(mod&&(k==='`'||k===';')){e.preventDefault();e.stopPropagation();toggleF();return;}
+  const kc=e.code||'';
+  if(mod&&!e.shiftKey&&(kc==='KeyZ'||kc==='KeyY'||kc==='KeyB'||kc==='KeyI'||kc==='KeyU'||kc==='KeyA')){e.preventDefault();e.stopPropagation();
+   if(kc==='KeyZ')undo();else if(kc==='KeyY')redo();else if(kc==='KeyA'){sel={r:R0,c:0};sel2={r:R-1,c:C-1};render();}else ribDo(kc[3].toLowerCase());return;}
+  if(mod&&e.shiftKey&&(kc==='Digit5'||kc==='Digit1'||kc==='Digit4')){e.preventDefault();e.stopPropagation();ribDo(kc==='Digit5'?'pct':kc==='Digit1'?'comma':'cur');return;}
+  if(mod&&e.shiftKey&&kc==='KeyZ'){e.preventDefault();e.stopPropagation();redo();return;}
+  /* Ctrl + arrow jumps to the edge of the data block, as in Excel */
+  const jmp={ArrowDown:[1,0],ArrowUp:[-1,0],ArrowLeft:[0,1],ArrowRight:[0,-1]}[k];
+  if(mod&&jmp){e.preventDefault();e.stopPropagation();const has=(r,c)=>S.raw[addr(r,c)]!=null;let r=sel.r,c=sel.c;const ok=(r,c)=>r>=R0&&r<R&&c>=0&&c<C;
+   const nr=r+jmp[0],nc=c+jmp[1];if(ok(nr,nc)){if(has(r,c)&&has(nr,nc)){while(ok(r+jmp[0],c+jmp[1])&&has(r+jmp[0],c+jmp[1])){r+=jmp[0];c+=jmp[1];}}
+    else{r=nr;c=nc;while(!has(r,c)&&ok(r+jmp[0],c+jmp[1])){r+=jmp[0];c+=jmp[1];}}}
+   if(e.shiftKey)sel2={r,c};else{sel={r,c};sel2={r,c};}render();return;}
+  if(k==='Home'&&!e.shiftKey){e.preventDefault();e.stopPropagation();sel={r:mod?R0:sel.r,c:0};sel2={...sel};render();return;}
   const nav={ArrowDown:[1,0],ArrowUp:[-1,0],ArrowLeft:[0,1],ArrowRight:[0,-1],Enter:[e.shiftKey?-1:1,0],Tab:[0,e.shiftKey?-1:1]};
   if(nav[k]){e.preventDefault();e.stopPropagation();if(e.shiftKey&&k.startsWith('Arrow')){sel2={r:Math.max(R0,Math.min(R-1,sel2.r+nav[k][0])),c:Math.max(0,Math.min(C-1,sel2.c+nav[k][1]))};}else move(...nav[k]);render();return;}
   if(k==='F2'){e.preventDefault();e.stopPropagation();startEdit('',true,'edit');return;}
@@ -290,6 +333,15 @@ function mount(host,cfg){
  bar.addEventListener('keydown',keyEdit);
  bar.addEventListener('blur',()=>{if(editing&&editing.where==='bar')setTimeout(()=>{if(editing&&editing.where==='bar'&&document.activeElement!==bar)commit(0,0);},120);});
  function toggleF(){showF=!showF;host.querySelector('[data-x="formulas"]')&&host.querySelector('[data-x="formulas"]').classList.toggle('on',showF);render();}
+ {const rb=host.querySelector('.xl-rib');
+  rb.addEventListener('pointerdown',e=>{if(e.target.closest('button'))e.preventDefault();});
+  rb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;ribDo(b.dataset.r);focusG();});
+  rb.querySelector('select').addEventListener('change',e=>{ribDo(e.target.value);focusG();});}
+ /* a click on a column letter or a row number selects the whole column or row */
+ g.tHead.addEventListener('pointerdown',e=>{const th=e.target.closest('th');if(!th||th.classList.contains('xl-c0'))return;const c=th.cellIndex-1;if(c<0)return;e.preventDefault();if(editing)commit(0,0);
+  if(e.shiftKey){sel2={r:R-1,c};}else{sel={r:R0,c};sel2={r:R-1,c};}render();focusG();});
+ g.tBodies[0].addEventListener('pointerdown',e=>{const th=e.target.closest('th.xl-rn');if(!th)return;e.preventDefault();e.stopPropagation();if(editing)commit(0,0);const r=+th.textContent-1;
+  if(e.shiftKey){sel2={r,c:C-1};}else{sel={r,c:0};sel2={r,c:C-1};}render();focusG();},true);
  host.querySelector('.xl-tools').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const x=b.dataset.x;
   if(x==='pct'){for(let r=Math.min(sel.r,sel2.r);r<=Math.max(sel.r,sel2.r);r++)for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++){const a=addr(r,c);S.fmt[a]=/^pct/.test(S.fmt[a]||'')?'':'pct';}render();}
   if(x==='formulas')toggleF();

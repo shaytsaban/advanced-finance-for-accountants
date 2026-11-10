@@ -43,3 +43,52 @@ def CH(x, series, x0, x1, y0, y1, xt, yt, xl='מחיר בפקיעה (S_T)', yl='
 
 
 PAYC, PNLC = '#6d4df2', '#0f9d90'
+
+
+# ---------------------------------------------------------------- animated diagrams (Shay, 2026-11-10: principle slides before heavy exercises,
+# flowcharts that are clear and representative, revealed click by click with animation). Every group is a click step (n) with its own animation.
+def GS(n, inner, anim='fade', d=0.0):
+    """An svg group revealed on click n. anim: fade, grow (bars rise from the axis), draw (lines draw themselves), pop."""
+    return f'<g class="st an-{anim}" data-n="{n * 10}" style="--d:{d:.2f}s">{inner}</g>'
+
+
+def T(x, y, t, fs=17, fill='#16213a', w=600, a='middle'):
+    rtl = ' direction="rtl"' if HEB.search(str(t)) else ''
+    if rtl: a = {'start': 'end', 'end': 'start'}.get(a, a)
+    return f'<text x="{x:.1f}" y="{y:.1f}" font-size="{fs}" text-anchor="{a}" fill="{fill}" font-weight="{w}"{rtl}>{_html.escape(str(t))}</text>'
+
+
+def ARW(x1, y1, x2, y2, col='#1b2d55', wd=2.6, curve=0, dash=False):
+    """An arrow that draws itself; curve bends it up (negative) or down."""
+    mx, my = (x1 + x2) / 2, (y1 + y2) / 2 + curve
+    dd = ' stroke-dasharray="6 5"' if dash else ''
+    import math
+    ang = math.atan2(y2 - my, x2 - mx)
+    hx1, hy1 = x2 - 11 * math.cos(ang - .45), y2 - 11 * math.sin(ang - .45)
+    hx2, hy2 = x2 - 11 * math.cos(ang + .45), y2 - 11 * math.sin(ang + .45)
+    return (f'<path d="M{x1:.1f} {y1:.1f} Q{mx:.1f} {my:.1f} {x2:.1f} {y2:.1f}" fill="none" stroke="{col}" stroke-width="{wd}" stroke-linecap="round" pathLength="1"{dd}/>'
+            f'<path d="M{hx1:.1f} {hy1:.1f} L{x2:.1f} {y2:.1f} L{hx2:.1f} {hy2:.1f}" fill="none" stroke="{col}" stroke-width="{wd}" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>')
+
+
+def BADGE(x, y, t, fill='#1b2d55', col='#fff', fs=16, padx=10):
+    w = max(40, len(str(t)) * fs * .56 + 2 * padx)
+    return f'<rect x="{x - w / 2:.1f}" y="{y - fs - 4:.1f}" width="{w:.1f}" height="{fs + 12:.1f}" rx="{(fs + 12) / 2:.1f}" fill="{fill}"/>' + T(x, y + 1, t, fs, col, 700)
+
+
+def NODE(x, y, w, h, t, fill='#fff', stroke='#1b2d55', col='#16213a', fs=17, lines=None):
+    """A flowchart box with one or two lines of text."""
+    lines = lines or [t]
+    ty = y + h / 2 - (len(lines) - 1) * (fs + 3) / 2 + fs * .36
+    return (f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="14" fill="{fill}" stroke="{stroke}" stroke-width="2.4"/>'
+            + ''.join(T(x + w / 2, ty + i * (fs + 3), ln, fs, col, 700 if i == 0 else 500) for i, ln in enumerate(lines)))
+
+
+def DIAG(inner, W, H, label):
+    return f'<svg class="diag" dir="ltr" viewBox="0 0 {W} {H}" role="img" aria-label="{_html.escape(label)}">{inner}</svg>'
+
+
+def MEME(key, top, bottom, n=0):
+    """A meme card: an original cartoon with a top and a bottom caption."""
+    svg = f'<svg viewBox="0 0 120 120" dir="ltr" role="img" aria-hidden="true">{TOONS[key]}</svg>'
+    inner = f'<div class="mm-t">{TX(top)}</div>{svg}<div class="mm-b">{TX(bottom)}</div>'
+    return ST(n, inner, cls='meme') if n else f'<div class="meme">{inner}</div>'

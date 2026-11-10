@@ -14,8 +14,8 @@ LMETA = {
          sub='מה קונים כשקונים אג״ח, איך מחשבים את שוויה, ומה משתנה כשהקופון חצי שנתי או רבעוני.', chip='שבעה תרגילים לעבודה עצמית',
          cover='ערך נקוב, ריבית נקובה, שיעור תשואה לפדיון, היוון, NPV ו-PV, פרמיה ונכיון, קופון חצי שנתי ורבעוני והמרת ריבית, ושבעה תרגילים לעבודה עצמית.',
          next_h='אג״ח לשיעורין', next_t='אג״ח שהקרן שלה מוחזרת בחלקים: יתרת ערך נקוב, קופון על היתרה ולוח סילוקין מלא. לפני המפגש: תרגילי הבית של שיעור 1.'),
- 2: dict(date='', h1=('אג״ח לשיעורין', 'ושווי לאורך חיי האג״ח'), title='אג״ח לשיעורין ושווי בין מועדים',
-         sub='כשהקרן מוחזרת בחלקים: לוח סילוקין וקופון על היתרה. ושווי האג״ח מיד אחרי תשלום, רגע לפני תשלום ובין שני מועדי תשלום.', chip='שאלות 3 ו-4 מקובץ שיעור 1 ושאלות 2 עד 4 מקובץ שיעור 2',
+ 2: dict(date='10.11.2026', h1=('אג״ח לשיעורין', 'ושווי לאורך חיי האג״ח'), title='אג״ח לשיעורין ושווי בין מועדים',
+         sub='כשהקרן מוחזרת בחלקים: לוח סילוקין וקופון על היתרה. ושווי האג״ח מיד אחרי תשלום, רגע לפני תשלום ובין שני מועדי תשלום.', chip='תזכורת לשיעור 1, ושאלות 1 עד 4 מקובץ שיעור 2',
          cover='אג״ח לשיעורין, יתרת ערך נקוב, לוח סילוקין, קופון על היתרה, שווי מיד אחרי תשלום ורגע לפניו, שווי בין מועדי תשלום, תרגיל בסגנון בחינה ותרגול על כל נושאי האג״ח השקליות.',
          next_h='חילוץ תשואה לפדיון', next_t='כשהמחיר ידוע והתשואה לא: הפונקציות IRR ו-RATE, גם באג״ח לשיעורין ובין מועדי תשלום. לפני המפגש: תרגילי הבית של שיעור 2.')}[LESSON]
 XSPECS = []        # every live sheet, in deck order: the practice workbooks are built from these
@@ -40,7 +40,7 @@ def DEF(name, text, demo, n=0, trm=None, cls=''):
 
 
 def BAND(kind, text, n=0):
-    lab = {'dg': 'דגש', 'trap': 'המלכודת', 'note': 'הערה'}.get(kind, '')
+    lab = {'dg': 'דגש', 'trap': 'המלכודת', 'note': 'הערה', 'tip': 'טיפ'}.get(kind, '')
     inner = (f'<b>{lab}:</b> ' if lab else '') + TX(text)
     return ST(n, inner, cls='band ' + kind) if n else f'<div class="band {kind}">{inner}</div>'
 
@@ -321,7 +321,12 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
             fm = '<p class="fml">' + ' '.join(f'<span class="fx"><b>{a}</b> ' + XL(sol[a].replace('$', '¤')) + '</span>' for a in _repr_targets(sol)) + '</p>'
         return f'<p class="qstem">{TX(task)}</p><table class="tbl2 xlp">{hdr}{t}</table>{fm}'
     NACT[0] += 1
-    cfgd = dict(rows=rs, cols=cs, widths=widths, data={k: str(v) for k, v in data.items()}, targets=targets, solution=sol, headRows=head, inputs=[], fmt=fmt, solFmt=fmt,
+    # Shay, 2026-11-10: use the screen. The live sheet shows spare empty rows and columns, as a full Excel window does; the slide fit
+    # caps its height to the free space, so it always fills the area under and beside the table. The spec (and the appendix) keep the real size.
+    real_w = sum(widths) + max(0, cs - len(widths)) * 92
+    pad_c = max(0, int(((540 if side else 1100) - real_w - 50) // 80))
+    widths = list(widths) + [92] * max(0, cs - len(widths)) + [80] * pad_c
+    cfgd = dict(rows=rs + 14, cols=cs + pad_c, widths=widths, data={k: str(v) for k, v in data.items()}, targets=targets, solution=sol, headRows=head, inputs=[], fmt=fmt, solFmt=fmt,
                 hints=[TX(FXW(x)) for x in (hints or ['קראו שוב את כותרת העמודה, וכתבו את החישוב במילים לפני הנוסחה.'])], remind=TX(FXW(remind or '')), partial=partial or targets[:1], values=values, done=TX(FXW(done)))
     if not remind: cfgd.pop('remind')
     if traps: cfgd['traps'] = {a: [[f, TX(FXW(m))] for f, m in L] for a, L in traps.items()}
@@ -358,7 +363,7 @@ def XLS(sid, title, h, task, data, sol, widths, head, **kw):
     S(sid, title, h, f'<div class="act xlq" id="{sid}-x" data-cfg="{_cfg(cfgd)}">{inner}</div>', kick=f'חלק {CUR[0]} · אקסל בתוך השקף')
 
 
-def QX(sid, tag, title, stem, task, data, sol, widths, head, note=None, qmc='', **kw):
+def QX(sid, tag, title, stem, task, data, sol, widths, head, note=None, qmc='', kicktag=None, **kw):
     """A question beside the live sheet in which it is solved. No algebra: the steps are formulas in the sheet."""
     head_t = f'{tag}: {title}' if tag else title
     stem_html = ''.join(f'<p>{TX(x)}</p>' for x in stem)
@@ -370,7 +375,7 @@ def QX(sid, tag, title, stem, task, data, sol, widths, head, note=None, qmc='', 
     ch = cfgd.get('chart')
     sv = f'<svg class="xlc" viewBox="0 0 {ch.get("W", 470)} {ch.get("H", 330)}" role="img" aria-label="תרשים"></svg>' if ch else ''
     S(sid, head_t, head_t, f'<div class="act xlq qx" id="{sid}-x" data-cfg="{_cfg(cfgd)}"><div class="qr"><div class="card qstem">{stem_html}</div>{qmc}{sv}{notes}</div><div class="xw">{inner}<div class="xfb"></div></div></div>',
-      kick=f'חלק {CUR[0]} · {tag or "שאלה ואקסל"}', cls='qslide')
+      kick=f'חלק {CUR[0]} · {kicktag or tag or "שאלה ואקסל"}', cls='qslide')
 
 
 def MCX(sid, title, h, item, task, data, sol, widths, head, **kw):
@@ -415,7 +420,7 @@ def CASE(sid, title, story, qtext, opts, a, why, steps, toon=None):
 
 def STEPS(chart, items, cls=''):
     """A chart built click by click beside its explanation. items: prose or '=' + math, in click order."""
-    return f'<div class="qg"><div class="card chartw">{chart}</div><div class="rl">{items}</div></div>'
+    return f'<div class="qg {cls}"><div class="card chartw">{chart}</div><div class="rl">{items}</div></div>'
 
 
 def RL(items, start=1):

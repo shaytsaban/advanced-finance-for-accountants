@@ -357,3 +357,41 @@ code.xl{direction:ltr;unicode-bidi:isolate;display:inline-block;font:700 20px 'M
 .qx .qr .mc .q{font-size:17px}.qx .qr .mc .o{font-size:17px;padding:5px 10px}
 .qx .qr svg.xlc{max-height:220px}
 .xl-g td.bld{box-shadow:inset 0 0 0 2px #ff6a4d;background:#fff1ec}
+/* the Home ribbon of the sheet, as in Excel */
+.xl-rib{display:flex;flex-wrap:wrap;gap:4px;align-items:center;background:#f3f2f1;border:1px solid #c8c8c8;border-bottom:0;border-radius:8px 8px 0 0;padding:3px 6px;direction:rtl}
+.xl-rib+.xl-top{border-radius:0}
+.xl-grp{display:inline-flex;gap:1px;align-items:center;padding-inline-end:5px;margin-inline-end:1px;border-inline-end:1px solid #d6d6d6}
+.xl-grp:last-child{border:0}
+.xl-rib button{min-width:30px;height:30px;padding:0 5px;border:1px solid transparent;border-radius:4px;background:transparent;cursor:pointer;color:#252423;font:600 16.5px/1 'Segoe UI',Arial,sans-serif;display:inline-flex;align-items:center;justify-content:center}
+.xl-rib button svg{width:18px;height:18px}
+.xl-rib button:hover{background:#e1dfdd;border-color:#c8c6c4}
+.xl-rib button.on{background:#c8e6d2;border-color:#217346}
+.xl-rib button:disabled{opacity:.35;cursor:default;background:transparent;border-color:transparent}
+.xl-rib button.xl-dec{font-size:16.5px;letter-spacing:-.5px}
+.xl-rib button.xl-dec sub{font-size:9px;vertical-align:0}
+.xl-rib select{height:30px;border:1px solid #c8c6c4;border-radius:4px;background:#fff;font:16.5px 'Segoe UI',Arial,sans-serif;padding:0 4px;margin-inline-end:3px;color:#252423}
+.xl-g thead th:not(.xl-c0),.xl-g th.xl-rn{cursor:pointer}
+/* animated diagrams: each click step has its own motion; print and the summary show the final state */
+svg.diag{width:100%;height:auto;display:block;font-family:Rubik,Heebo,sans-serif}
+svg .st.an-grow rect.bar{transform:scaleY(0);transform-box:fill-box;transform-origin:50% 100%;transition:transform .7s cubic-bezier(.2,.9,.25,1.15) var(--d,0s)}
+svg .st.an-grow.show rect.bar{transform:scaleY(1)}
+svg .st.an-draw path,svg .st.an-draw line{stroke-dasharray:1 1;stroke-dashoffset:1;transition:stroke-dashoffset .9s ease var(--d,0s)}
+svg .st.an-draw path[stroke-dasharray="6 5"]{stroke-dasharray:6 5;stroke-dashoffset:0;opacity:0;transition:opacity .6s ease var(--d,0s)}
+svg .st.an-draw.show path,svg .st.an-draw.show line{stroke-dashoffset:0}
+svg .st.an-draw.show path[stroke-dasharray="6 5"]{opacity:1}
+svg .st.an-pop{transform:scale(.4);transform-box:fill-box;transform-origin:50% 50%;transition:transform .5s cubic-bezier(.2,.9,.3,1.4) var(--d,0s),opacity .35s ease var(--d,0s)}
+svg .st.an-pop.show{transform:scale(1)}
+svg .st.an-fade{transition:opacity .5s ease var(--d,0s)}
+@media print{svg .st *,svg .st{transform:none!important;stroke-dashoffset:0!important;opacity:1!important}}
+.diagw{padding:10px 12px}
+.band.tip{background:#e9f7ef;border-right:5px solid #25a65f;color:#14532d}
+.meme{display:flex;flex-direction:column;align-items:center;background:#16213a;border-radius:16px;padding:8px 12px 10px;width:250px;box-shadow:0 10px 26px rgba(22,33,58,.25)}
+.meme svg{width:120px;height:120px;background:#fff;border-radius:12px;margin:6px 0}
+.meme .mm-t,.meme .mm-b{color:#fff;font-weight:900;font-size:19px;line-height:1.2;text-align:center;letter-spacing:.2px;text-shadow:0 2px 0 #000,0 0 6px rgba(0,0,0,.6)}
+.memew{display:flex;gap:16px;align-items:flex-start}
+.qg.wide{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+.qg.wide .rl>.st,.qg.wide .rl .sp{font-size:18.5px}
+svg.diag{direction:ltr}
+.xl-rib .xl-dec{direction:ltr}
+.memew.mid ol.steps li{font-size:24px;line-height:1.35;padding-top:16px;padding-bottom:16px}
+.memew.mid .meme{width:290px}.memew.mid .meme svg{width:170px;height:170px}
