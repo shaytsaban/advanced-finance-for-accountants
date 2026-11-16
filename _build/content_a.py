@@ -7,7 +7,7 @@ COURSE = 'מימון מתקדם לחשבונאים'
 INST = 'המכללה למנהל · מסלול חשבונאות'
 SEM = 'סמסטר א׳ תשפ״ז'
 LESSON = globals().get('LESSON', 1)
-TOTAL_PARTS = {1: 4, 2: 4, 3: 5}[LESSON]
+TOTAL_PARTS = {1: 4, 2: 4, 3: 6}[LESSON]
 # per lesson: deck title, subtitle, chips, cover line and the next meeting. The first meeting date is not in the source files.
 # Shay, 2026-11-03: lesson 1 ended before amortizing bonds. From that slide on, the content is lesson 2.
 LMETA = {
@@ -16,13 +16,13 @@ LMETA = {
          cover='ערך נקוב, ריבית נקובה, שיעור תשואה לפדיון, היוון, NPV ו-PV, פרמיה ונכיון, קופון חצי שנתי ורבעוני והמרת ריבית, ושבעה תרגילים לעבודה עצמית.',
          next_h='אג״ח לשיעורין', next_t='אג״ח שהקרן שלה מוחזרת בחלקים: יתרת ערך נקוב, קופון על היתרה ולוח סילוקין מלא. לפני המפגש: תרגילי הבית של שיעור 1.'),
  2: dict(date='10.11.2026', h1=('אג״ח לשיעורין', 'ושווי אחרי ההנפקה'), title='אג״ח לשיעורין ושווי אחרי ההנפקה',
-         sub='כשהקרן מוחזרת בחלקים: לוח סילוקין וקופון על היתרה. ושווי האג״ח מיד אחרי תשלום, ובין שני מועדי תשלום.', chip='תזכורת לשיעור 1, ושאלות משני קובצי השיעורים',
+         sub='כשהקרן מוחזרת בחלקים: לוח סילוקין וקופון על היתרה. ושווי האג״ח מיד אחרי תשלום, ובין שני מועדי תשלום.', chip='תזכורת לשיעור 1, וארבע שאלות על לוח תזרימים מלא',
          cover='אג״ח לשיעורין, יתרת ערך נקוב, לוח סילוקין, קופון על היתרה, שווי מיד אחרי תשלום, שווי בין מועדי תשלום, תרגיל בסגנון בחינה ותרגול.',
          next_h='שווי רגע לפני תשלום, ואג״ח שנסחרת בין מועדים', next_t='ממשיכים בשאלה 3 מקובץ שיעור 2, סעיפים ג ו-ד: שווי מיד אחרי קופון ורגע לפניו. אחר כך אג״ח שנסחרת בין מועדי תשלום. לפני המפגש: תרגילי הבית של שיעור 2.'),
  3: dict(date='', h1=('אג״ח:', 'שווי לפני תשלום, מסחר בין מועדים וחילוץ תשואה'), title='לפני תשלום, בין מועדים וחילוץ תשואה',
-         sub='ממשיכים מהנקודה שבה עצרנו בשיעור 2: שווי רגע לפני תשלום, אג״ח שנקנית בין שני מועדי תשלום, ולבסוף השאלה ההפוכה: המחיר ידוע, ומחפשים את התשואה.', chip='תזכורת לשיעור 2, ושאלות 2 עד 7 מקובץ שיעור 2',
-         cover='שווי מיד אחרי תשלום ורגע לפניו, אג״ח שנסחרת בין מועדי תשלום, חילוץ תשואה לפדיון בפונקציות IRR ו-RATE, והמרת תשואה לתקופה לתשואה שנתית.',
-         next_h='חילוץ תשואה בין מועדים, ותשואה לתקופת החזקה', next_t='חילוץ תשואה לפדיון כשהאג״ח נקנית בין שני מועדי תשלום, תקופות חלקיות, ותשואה לתקופת החזקה. לפני המפגש: תרגילי הבית של שיעור 3.')}[LESSON]
+         sub='ממשיכים מהנקודה שבה עצרנו בשיעור 2: שווי רגע לפני תשלום, אג״ח שנקנית בין שני מועדי תשלום, והשאלה ההפוכה: המחיר ידוע, ומחפשים את התשואה, גם בין מועדים.', chip='תזכורת לשיעור 2, ועשר שאלות על לוח תזרימים מלא',
+         cover='שווי מיד אחרי תשלום ורגע לפניו, אג״ח שנסחרת בין מועדי תשלום, חילוץ תשואה לפדיון בפונקציות IRR ו-RATE, חילוץ תשואה בין מועדי תשלום בעזרת שורות אפס, והמרת תשואה לתקופה לתשואה שנתית.',
+         next_h='תשואה לתקופת החזקה', next_t='תשואה לתקופת החזקה (HPR) ותקופות חלקיות. לפני המפגש: תרגילי הבית של שיעור 3, פרק 3 בקובץ התרגילים.')}[LESSON]
 XSPECS = []        # every live sheet, in deck order: the practice workbooks are built from these
 SL = []            # every slide, in order
 CUR = [None]       # current part number
@@ -308,7 +308,7 @@ def _auto_steps(data, sol, head, fmt):
 
 
 def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None, remind=None, partial=None, chart=None, values=False, done='', extra='',
-            fmt=None, traps=None, allow=None, r0=1, maxh=None, tol=None, need=None, needMsg=None, xname=None, xtitle=None, steps=None, side=False, title='', signMsg=None, qtext=None, build=None):
+            fmt=None, traps=None, allow=None, r0=1, maxh=None, tol=None, need=None, needMsg=None, xname=None, xtitle=None, steps=None, side=False, title='', signMsg=None, qtext=None, build=None, recap=None):
     """The live sheet itself. side=True: the sheet sits beside a question, and its feedback goes under the question (an element .xfb)."""
     fmt = fmt or {}
     # Shay, 2026-11-03: the sheet holds no number of the solution. Every number of the question (and every period number) is typed by the student,
@@ -326,6 +326,7 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
     data = {a: v for a, v in data.items() if a not in inputs and a not in given_f}
     sol = {**inputs, **given_f, **sol}
     data = _argnames(dict(data), sol, head)
+    n_user = len(steps or [])
     if not steps:
         steps = _auto_steps(data, {a: v for a, v in sol.items() if a not in inputs and a not in given_f}, head, fmt)
     if steps:
@@ -389,6 +390,8 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
         cfgd['data'] = {k: v for k, v in cfgd['data'].items() if k not in bc}
         cfgd['build'] = [dict(cells=cells, note=TX(FXW(note))) for cells, note in build]
     if need: cfgd['need'] = need; cfgd['needMsg'] = needMsg or ''
+    if recap and steps:
+        cfgd['recapK'] = len(steps) - n_user + recap['k']; cfgd['recapNote'] = TX(FXW(recap['note']))
     if steps: cfgd['steps'] = [dict(cells=st['cells'], note=TX(FXW(st['note'])), **({'sel': st['sel']} if st.get('sel') else {}), **({'sel2': st['sel2']} if st.get('sel2') else {})) for st in steps]
     sv = ''
     if chart:
@@ -421,15 +424,35 @@ def XLS(sid, title, h, task, data, sol, widths, head, **kw):
     S(sid, title, h, f'<div class="act xlq" id="{sid}-x" data-cfg="{_cfg(cfgd)}">{inner}</div>', kick=f'חלק {CUR[0]} · אקסל בתוך השקף')
 
 
-def QX(sid, tag, title, stem, task, data, sol, widths, head, note=None, qmc='', kicktag=None, **kw):
+def _req(x):
+    """Shay, 2026-11-16: when a question asks several things, each one sits on its own line."""
+    m = re.search(r'<b>נדרש:</b>\s*(א\. .*)$', x, re.S)
+    if not m: return f'<p>{TX(x)}</p>'
+    parts = re.split(r'\s+(?=[בגדהו]\. )', m.group(1))
+    if len(parts) < 2: return f'<p>{TX(x)}</p>'
+    pre = x[:m.start()].strip()
+    return (f'<p>{TX(pre)}</p>' if pre else '') + '<p class="reqh"><b>נדרש:</b></p><ol class="req">' + ''.join(f'<li><b>{p[0]}.</b> {TX(p[3:].strip())}</li>' for p in parts) + '</ol>'
+
+
+def QX(sid, tag, title, stem, task, data, sol, widths, head, note=None, qmc='', kicktag=None, recap=None, stages=None, **kw):
     """A question beside the live sheet in which it is solved. No algebra: the steps are formulas in the sheet."""
     head_t = f'{tag}: {title}' if tag else title
-    stem_html = ''.join(f'<p>{TX(x)}</p>' for x in stem)
+    stem_html = ''.join(_req(x) for x in stem)
     notes = ''.join(BAND(*x) if MODE == 'deck' else BAND(x[0], x[1]) for x in (note or []))   # (kind, text) or (kind, text, click): revealed beside the sheet
-    r = _xsheet(sid, task, data, sol, widths, head, side=True, title=head_t, qtext=' '.join(re.sub('<[^>]+>', '', x) for x in stem), **kw)
+    # recap (Shay, 2026-11-16): a question that continues from the previous lesson shows, under its text, what was done there, with a
+    # button that fills the sheet up to the point where the lesson stopped. recap = dict(title, items, k = hand-written steps done, note)
+    # stages: the work stages of a full exercise, listed under the question
+    box = ''
+    if recap:
+        box = ('<div class="recapbox"><b class="ct">' + TX(recap['title']) + '</b><ul>' + ''.join('<li>' + TX(x) + '</li>' for x in recap['items']) + '</ul>'
+               + ('<button class="abtn recapbtn">' + TX(recap['button']) + '</button>' if MODE == 'deck' else '') + '</div>')
+    if stages:
+        box += '<div class="recapbox stages"><b class="ct">שלבי העבודה</b><ol>' + ''.join('<li>' + TX(x) + '</li>' for x in stages) + '</ol></div>'
+    r = _xsheet(sid, task, data, sol, widths, head, side=True, title=head_t, qtext=' '.join(re.sub('<[^>]+>', '', x) for x in stem), recap=recap, **kw)
     if MODE == 'pdf':
-        S(sid, head_t, head_t, f'<div class="qstem">{stem_html}</div>{qmc}{r}{notes}', kind='q'); return
+        S(sid, head_t, head_t, f'<div class="qstem">{stem_html}</div>{box}{qmc}{r}{notes}', kind='q'); return
     cfgd, inner = r
+    qmc = box + qmc
     ch = cfgd.get('chart')
     sv = f'<svg class="xlc" viewBox="0 0 {ch.get("W", 470)} {ch.get("H", 330)}" role="img" aria-label="תרשים"></svg>' if ch else ''
     S(sid, head_t, head_t, f'<div class="act xlq qx" id="{sid}-x" data-cfg="{_cfg(cfgd)}"><div class="qr"><div class="card qstem">{stem_html}</div>{qmc}{sv}{notes}</div><div class="xw">{inner}<div class="xfb"></div></div></div>',
@@ -492,5 +515,5 @@ def RL(items, start=1):
 
 
 exec(R('content_g.py'))
-for _f in {1: ['content_l1a.py', 'content_l1b.py', 'content_l1c.py'], 2: ['content_l2a.py', 'content_l2b.py', 'content_l2c.py'], 3: ['content_l3a.py', 'content_l3b.py', 'content_l3c.py', 'content_l3d.py']}[LESSON]:
+for _f in {1: ['content_l1a.py', 'content_l1b.py', 'content_l1c.py'], 2: ['content_l2a.py', 'content_l2b.py', 'content_l2c.py'], 3: ['content_l3a.py', 'content_l3b.py', 'content_l3c.py', 'content_l3e.py', 'content_l3d.py']}[LESSON]:
     exec(R(_f))

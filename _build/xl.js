@@ -383,6 +383,12 @@ function mount(host,cfg){
   stepK++;const last=stepK===cfg.steps.length;
   if(fb)setFb(`<div class="xl-step"><b>צעד ${stepK} מתוך ${cfg.steps.length}:</b> ${st.note}${last?' <b>זה הפתרון המלא.</b>':''}</div>`);
   const b=host.querySelector('[data-x="step"]');if(b)b.textContent=last?'↺ מההתחלה':'▶ הצעד הבא';if(cfg.onChange)cfg.onChange();}
+ /* recap: fill the sheet up to the step where the previous lesson stopped, so the class continues from there */
+ function recapFill(){if(!cfg.steps||!cfg.recapK)return;if(editing)cancel();if(bk<BL.length)buildTo(BL.length,false);load();marks={};
+  for(let i=0;i<cfg.recapK;i++)Object.entries(cfg.steps[i].cells).forEach(([a,f])=>{S.set(a,f);marks[a]='stp';});
+  const st=cfg.steps[cfg.recapK-1],ks=Object.keys(st.cells);sel=parseAddr(st.sel||ks[0]);sel2=parseAddr(st.sel2||st.sel||ks[0]);stepK=cfg.recapK;render();
+  if(fb)setFb(`<div class="xl-step"><b>כאן עצרנו (צעד ${stepK} מתוך ${cfg.steps.length}):</b> ${cfg.recapNote||''}</div>`);
+  const b=host.querySelector('[data-x="step"]');if(b)b.textContent='▶ הצעד הבא';if(cfg.onChange)cfg.onChange();}
  /* checking: the value must match, the cell must hold a formula with references (unless the solution has none: =14*12 converts years to months), and no number from the table may be typed in */
  const needOf=a=>cfg.need?(typeof cfg.need==='object'?cfg.need[a]:cfg.need):null;
  function check(silent){const sol=new Sheet(R,C);Object.entries({...cfg.data,...(cfg.bdata||{})}).forEach(([a,v])=>sol.set(a,v));Object.entries(cfg.solution).forEach(([a,v])=>sol.set(a,v));sol.recalc();
@@ -413,7 +419,7 @@ function mount(host,cfg){
   if(fb)setFb(all?`<div class="xl-ok">✔ כל ${ok} התאים נכונים${silent?' (פתרון לדוגמה)':''}.${cfg.done?' '+cfg.done:''}</div>`:`<div class="xl-no">נכונים ${ok} מתוך ${cfg.targets.length}.</div><div class="xl-notes">${notes.slice(0,2).join('<br>')}${notes.length>2?' ועוד '+(notes.length-2)+' תאים.':''}</div>`);
   if(all&&!silent)host.dataset.solved='1';if(cfg.onChange)cfg.onChange();}
  render();
- return {sheet:S,render,select:(a)=>{sel=parseAddr(a);sel2={...sel};render();},put:(a,v)=>{S.set(a,v);render();if(cfg.onChange)cfg.onChange();},stepNext:()=>stepNext(),buildPending:()=>bk<BL.length,buildNext:()=>buildTo(bk+1,true),buildBack:()=>buildTo(bk-1,true),buildAll:()=>{if(bk<BL.length)buildTo(BL.length,false);},buildBackAll:()=>buildTo(0,false),buildCount:()=>BL.length,built:()=>bk,stepActive:()=>!!cfg.steps&&stepK>0&&stepK<cfg.steps.length,stepCount:()=>stepK,putMany:o=>{Object.entries(o).forEach(([a,v])=>S.set(a,v));render();if(cfg.onChange)cfg.onChange();},get:a=>S.val[a],raw:a=>S.raw[a],check,reset:()=>host.querySelector('[data-x="reset"]').click(),showFormulas:v=>{if(showF!==!!v)toggleF();},
+ return {sheet:S,render,select:(a)=>{sel=parseAddr(a);sel2={...sel};render();},put:(a,v)=>{S.set(a,v);render();if(cfg.onChange)cfg.onChange();},stepNext:()=>stepNext(),recapFill,buildPending:()=>bk<BL.length,buildNext:()=>buildTo(bk+1,true),buildBack:()=>buildTo(bk-1,true),buildAll:()=>{if(bk<BL.length)buildTo(BL.length,false);},buildBackAll:()=>buildTo(0,false),buildCount:()=>BL.length,built:()=>bk,stepActive:()=>!!cfg.steps&&stepK>0&&stepK<cfg.steps.length,stepCount:()=>stepK,putMany:o=>{Object.entries(o).forEach(([a,v])=>S.set(a,v));render();if(cfg.onChange)cfg.onChange();},get:a=>S.val[a],raw:a=>S.raw[a],check,reset:()=>host.querySelector('[data-x="reset"]').click(),showFormulas:v=>{if(showF!==!!v)toggleF();},
   fmtSel:fn=>{for(let r=Math.min(sel.r,sel2.r);r<=Math.max(sel.r,sel2.r);r++)for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++){const a=addr(r,c),f=fn(S.fmt[a]||'',S.val[a],display(S,a).t);if(f)S.fmt[a]=f;else delete S.fmt[a];}render();},
   fmtAt:a=>S.fmt[a]||'',active:()=>addr(sel.r,sel.c),onSel:fn=>{cfg.onSelect=fn;}};}
 const api={mount,shift,Sheet,addr,parseAddr,colName,tokenize,parse,FIN};if(typeof window!=='undefined')window.__XL=api;return api;

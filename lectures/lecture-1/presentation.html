@@ -522,6 +522,20 @@ svg .st.show .ring{animation:xlring 1.6s ease-out 1s 2}
 .lsteps.three{grid-template-columns:repeat(3,1fr)}
 .tbl2.hwt td{font-size:18px;line-height:1.35;padding:8px 12px}.tbl2.hwt td:first-child{font-weight:700;width:26%}.tbl2.hwt td:last-child{width:18%;color:#5d6a86}
 .hwsteps ol.lg li{font-size:19px;line-height:1.35;margin-bottom:3px}
+/* what was done last lesson, under the question, with the button that fills the sheet up to that point */
+.recapbox{background:#eef2ff;border:2px solid #c8d4f2;border-radius:14px;padding:10px 14px;margin-top:8px}
+.recapbox .ct{display:block;font-size:17px;margin-bottom:4px;color:#1b2d55}
+.recapbox ul,.recapbox ol{margin:0;padding-inline-start:22px;font-size:16.5px;line-height:1.4}
+.recapbox .recapbtn{margin-top:8px;background:#1b2d55;color:#fff;border:0;border-radius:10px;padding:8px 14px;font:700 16.5px Rubik,Heebo,sans-serif;cursor:pointer}
+.recapbox .recapbtn:hover{background:#27447f}
+.recapbox.stages{background:#fff7e0;border-color:#f0d48a}
+ol.req{list-style:none;margin:2px 0 0;padding:0}ol.req li{margin:0 0 3px;padding-inline-start:0}ol.req li b{display:inline-block;min-width:22px}
+p.reqh{margin:6px 0 2px!important}
+.route.r6{grid-template-columns:repeat(3,1fr)}.route.r6 .rcard{min-height:150px}
+.qx:has(.recapbox) .qr .card.qstem{font-size:16.5px;line-height:1.3;padding:8px 12px}
+.qx:has(.recapbox) .qr .card.qstem p{margin:0 0 3px}
+.recapbox{padding:8px 12px}.recapbox .ct{font-size:16.5px;margin-bottom:2px}.recapbox ul,.recapbox ol{line-height:1.3}
+.recapbox .recapbtn{margin-top:6px;padding:7px 14px}
 </style>
 </head>
 <body>
@@ -1035,6 +1049,12 @@ function mount(host,cfg){
   stepK++;const last=stepK===cfg.steps.length;
   if(fb)setFb(`<div class="xl-step"><b>צעד ${stepK} מתוך ${cfg.steps.length}:</b> ${st.note}${last?' <b>זה הפתרון המלא.</b>':''}</div>`);
   const b=host.querySelector('[data-x="step"]');if(b)b.textContent=last?'↺ מההתחלה':'▶ הצעד הבא';if(cfg.onChange)cfg.onChange();}
+ /* recap: fill the sheet up to the step where the previous lesson stopped, so the class continues from there */
+ function recapFill(){if(!cfg.steps||!cfg.recapK)return;if(editing)cancel();if(bk<BL.length)buildTo(BL.length,false);load();marks={};
+  for(let i=0;i<cfg.recapK;i++)Object.entries(cfg.steps[i].cells).forEach(([a,f])=>{S.set(a,f);marks[a]='stp';});
+  const st=cfg.steps[cfg.recapK-1],ks=Object.keys(st.cells);sel=parseAddr(st.sel||ks[0]);sel2=parseAddr(st.sel2||st.sel||ks[0]);stepK=cfg.recapK;render();
+  if(fb)setFb(`<div class="xl-step"><b>כאן עצרנו (צעד ${stepK} מתוך ${cfg.steps.length}):</b> ${cfg.recapNote||''}</div>`);
+  const b=host.querySelector('[data-x="step"]');if(b)b.textContent='▶ הצעד הבא';if(cfg.onChange)cfg.onChange();}
  /* checking: the value must match, the cell must hold a formula with references (unless the solution has none: =14*12 converts years to months), and no number from the table may be typed in */
  const needOf=a=>cfg.need?(typeof cfg.need==='object'?cfg.need[a]:cfg.need):null;
  function check(silent){const sol=new Sheet(R,C);Object.entries({...cfg.data,...(cfg.bdata||{})}).forEach(([a,v])=>sol.set(a,v));Object.entries(cfg.solution).forEach(([a,v])=>sol.set(a,v));sol.recalc();
@@ -1065,7 +1085,7 @@ function mount(host,cfg){
   if(fb)setFb(all?`<div class="xl-ok">✔ כל ${ok} התאים נכונים${silent?' (פתרון לדוגמה)':''}.${cfg.done?' '+cfg.done:''}</div>`:`<div class="xl-no">נכונים ${ok} מתוך ${cfg.targets.length}.</div><div class="xl-notes">${notes.slice(0,2).join('<br>')}${notes.length>2?' ועוד '+(notes.length-2)+' תאים.':''}</div>`);
   if(all&&!silent)host.dataset.solved='1';if(cfg.onChange)cfg.onChange();}
  render();
- return {sheet:S,render,select:(a)=>{sel=parseAddr(a);sel2={...sel};render();},put:(a,v)=>{S.set(a,v);render();if(cfg.onChange)cfg.onChange();},stepNext:()=>stepNext(),buildPending:()=>bk<BL.length,buildNext:()=>buildTo(bk+1,true),buildBack:()=>buildTo(bk-1,true),buildAll:()=>{if(bk<BL.length)buildTo(BL.length,false);},buildBackAll:()=>buildTo(0,false),buildCount:()=>BL.length,built:()=>bk,stepActive:()=>!!cfg.steps&&stepK>0&&stepK<cfg.steps.length,stepCount:()=>stepK,putMany:o=>{Object.entries(o).forEach(([a,v])=>S.set(a,v));render();if(cfg.onChange)cfg.onChange();},get:a=>S.val[a],raw:a=>S.raw[a],check,reset:()=>host.querySelector('[data-x="reset"]').click(),showFormulas:v=>{if(showF!==!!v)toggleF();},
+ return {sheet:S,render,select:(a)=>{sel=parseAddr(a);sel2={...sel};render();},put:(a,v)=>{S.set(a,v);render();if(cfg.onChange)cfg.onChange();},stepNext:()=>stepNext(),recapFill,buildPending:()=>bk<BL.length,buildNext:()=>buildTo(bk+1,true),buildBack:()=>buildTo(bk-1,true),buildAll:()=>{if(bk<BL.length)buildTo(BL.length,false);},buildBackAll:()=>buildTo(0,false),buildCount:()=>BL.length,built:()=>bk,stepActive:()=>!!cfg.steps&&stepK>0&&stepK<cfg.steps.length,stepCount:()=>stepK,putMany:o=>{Object.entries(o).forEach(([a,v])=>S.set(a,v));render();if(cfg.onChange)cfg.onChange();},get:a=>S.val[a],raw:a=>S.raw[a],check,reset:()=>host.querySelector('[data-x="reset"]').click(),showFormulas:v=>{if(showF!==!!v)toggleF();},
   fmtSel:fn=>{for(let r=Math.min(sel.r,sel2.r);r<=Math.max(sel.r,sel2.r);r++)for(let c=Math.min(sel.c,sel2.c);c<=Math.max(sel.c,sel2.c);c++){const a=addr(r,c),f=fn(S.fmt[a]||'',S.val[a],display(S,a).t);if(f)S.fmt[a]=f;else delete S.fmt[a];}render();},
   fmtAt:a=>S.fmt[a]||'',active:()=>addr(sel.r,sel.c),onSel:fn=>{cfg.onSelect=fn;}};}
 const api={mount,shift,Sheet,addr,parseAddr,colName,tokenize,parse,FIN};if(typeof window!=='undefined')window.__XL=api;return api;
@@ -1124,7 +1144,7 @@ $$('.xlq').forEach(b=>{const cfg=cfg0(b),host=$('.sheet',b),svg=$('svg.xlc',b);l
    if(pts.length&&!single){const [x,y]=pts[pts.length-1];p+=f.tx(f.X(x)-8,f.Y(y)+(se.dy||-10),se.lab,{a:'end',fill:se.c,w:800,fs:17});}});
   if(single&&c.series[0].lab)p+=f.tx(f.W-f.mr-4,f.mt+16,c.series[0].lab,{a:'end',fill:c.series[0].c,w:800,fs:16});
   svg.innerHTML=p;};
- cfg.onChange=draw;cfg.onFb=()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);};api=XL.mount(host,cfg);host.__api=api;const fbx=$('.xl-fb',host);/* beside a question, the explanation of each step and the feedback sit in the question column, next to the sheet */if(fbx){const q=b.classList.contains('qx')&&!$('.qr svg.xlc',b)&&$('.qr',b);/* a question column that already holds a chart keeps the feedback under the sheet */if(q){const d=document.createElement('div');d.className='xfbs';q.appendChild(d);d.appendChild(fbx);}else($('.xfb',b)||$('.xlside',b)).appendChild(fbx);}draw();
+ cfg.onChange=draw;cfg.onFb=()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);};api=XL.mount(host,cfg);host.__api=api;{const rb=$('.recapbtn',b);if(rb)rb.addEventListener('click',()=>api.recapFill());}const fbx=$('.xl-fb',host);/* beside a question, the explanation of each step and the feedback sit in the question column, next to the sheet */if(fbx){const q=b.classList.contains('qx')&&!$('.qr svg.xlc',b)&&!$('.qr .recapbox',b)&&$('.qr',b);/* a question column that already holds a chart keeps the feedback under the sheet */if(q){const d=document.createElement('div');d.className='xfbs';q.appendChild(d);d.appendChild(fbx);}else($('.xfb',b)||$('.xlside',b)).appendChild(fbx);}draw();
  /* when feedback appears under a sheet, the sheet gives it room on the slide */
  if(fbx&&$('.xfb',b)){let t=null;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);},0);}).observe(fbx,{childList:true,subtree:true,characterData:true});}});
 
