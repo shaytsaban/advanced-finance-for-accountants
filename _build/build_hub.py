@@ -18,7 +18,7 @@ LESSONS = [
       learn=['תזכורת קצרה לשיעור 1', 'אג״ח לשיעורין ויתרת ערך נקוב: הקופון מחושב על היתרה בתחילת התקופה', 'לוח סילוקין מלא בגיליון, ושווי ב-NPV, גם בקופון חצי שנתי ורבעוני',
              'שווי מיד אחרי תשלום, ושווי בין מועדי תשלום: NPV ודחיפה קדימה לפי חודשים', 'תרגול עצמי מהקל אל הכבד, עם רמזים ופתרון בשלבים'],
       ),
- dict(k=3, h='שווי לפני תשלום, מסחר בין מועדים וחילוץ תשואה',
+ dict(k=3, date='17.11.2026', rec_soon=True, h='שווי לפני תשלום, מסחר בין מועדים וחילוץ תשואה',
       learn=['תזכורת קצרה לשיעור 2, וממשיכים מהשאלה שבה עצרנו: שאלה 3 מקובץ שיעור 2, סעיפים ג ו-ד', 'שווי רגע לפני תשלום: שתי דרכים לאותה תוצאה', 'אג״ח שנקנית ביום שבין שני מועדי תשלום',
              'חילוץ תשואה לפדיון: הפונקציות IRR ו-RATE, גם באג״ח לשיעורין, והמרה לשנה בחזקה', 'חילוץ תשואה בין מועדי תשלום: שורות אפס ורשת אחידה'],
       ),
@@ -38,6 +38,10 @@ def card(L):
     rec = (f'<div class="rec" id="recording-{k}"><h4>🎥 הקלטת השיעור · {n(L["date"])}</h4><div class="recbox">'
            f'<iframe src="https://www.youtube.com/embed/{yid}" title="הקלטת שיעור {k}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>'
            f'<a class="yt" href="{L["rec"]}" target="_blank" rel="noopener">לצפייה ב-YouTube</a></div>') if yid else ''
+    if not yid and L.get('rec_soon'):
+        # the meeting has a date but no recording yet: the frame is already in place
+        rec = (f'<div class="rec" id="recording-{k}"><h4>🎥 הקלטת השיעור · {n(L["date"])}</h4><div class="recbox"><div class="recph"><div><div class="big">🎥</div>'
+               f'<b>ההקלטה תעודכן לאחר המפגש</b></div></div></div></div>')
     return f'''<article class="lec" id="lesson-{k}">
 <div class="lec-head"><div class="lec-n">{k}</div><div><h3>{L['h']}</h3><div class="sub">מפגש {n(k)}{(' · ' + n(L['date'])) if L.get('date') else ''}</div></div></div>
 <div class="lec-body">
@@ -76,6 +80,8 @@ css += '''
 .rec h4{font-size:18px;margin-bottom:10px;color:var(--navy2)}
 .recbox{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#0c1426;box-shadow:0 10px 26px rgba(22,33,58,.18);border:3px solid var(--navy2)}
 .recbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.recph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#c8d4f2;padding:20px}
+.recph .big{font-size:46px;margin-bottom:6px}.recph b{font-size:19px;color:#fff}
 .rec a.yt{display:inline-block;margin-top:8px;font-weight:700;font-size:15px;color:var(--navy2);text-decoration:underline}
 .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
 .cnote{font-size:15px;color:var(--mut);margin-top:8px}
