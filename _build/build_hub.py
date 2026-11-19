@@ -18,7 +18,7 @@ LESSONS = [
       learn=['תזכורת קצרה לשיעור 1', 'אג״ח לשיעורין ויתרת ערך נקוב: הקופון מחושב על היתרה בתחילת התקופה', 'לוח סילוקין מלא בגיליון, ושווי ב-NPV, גם בקופון חצי שנתי ורבעוני',
              'שווי מיד אחרי תשלום, ושווי בין מועדי תשלום: NPV ודחיפה קדימה לפי חודשים', 'תרגול עצמי מהקל אל הכבד, עם רמזים ופתרון בשלבים'],
       ),
- dict(k=3, date='17.11.2026', rec='https://youtu.be/_4xNu7kK35o', h='שווי לפני תשלום, מסחר בין מועדים וחילוץ תשואה',
+ dict(k=3, date='17.11.2026', rec=['https://youtu.be/_4xNu7kK35o', 'https://youtu.be/7_Vgre3cQ-k'], h='שווי לפני תשלום, מסחר בין מועדים וחילוץ תשואה',
       learn=['תזכורת קצרה לשיעור 2, וממשיכים מהשאלה שבה עצרנו: שאלה 3 מקובץ שיעור 2, סעיפים ג ו-ד', 'שווי רגע לפני תשלום: שתי דרכים לאותה תוצאה', 'אג״ח שנקנית ביום שבין שני מועדי תשלום',
              'חילוץ תשואה לפדיון: הפונקציות IRR ו-RATE, גם באג״ח לשיעורין, והמרה לשנה בחזקה', 'חילוץ תשואה בין מועדי תשלום: שורות אפס ורשת אחידה'],
       ),
@@ -34,10 +34,16 @@ def card(L):
     nums = re.sub(r'(\d+\.\d+)', lambda m: n(m.group(1)), BKSPAN(k))
     L['hw'] = f'פרק {n(k)} בקובץ התרגילים: תרגילים {nums}' + ('' if not e else (', ותרגיל אחד בסגנון בחינה' if e == 1 else f', ו-{n(e)} תרגילים בסגנון בחינה'))
     L['hwnote'] = f'הקובץ כולל רק את התרגילים של שיעור {n(k)}, מסודרים לפי נושא. אין צורך לחפש תרגילים בפרקים אחרים.'
-    yid = L['rec'].rstrip('/').split('/')[-1] if L.get('rec') else ''
-    rec = (f'<div class="rec" id="recording-{k}"><h4>🎥 הקלטת השיעור · {n(L["date"])}</h4><div class="recbox">'
-           f'<iframe src="https://www.youtube.com/embed/{yid}" title="הקלטת שיעור {k}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>'
-           f'<a class="yt" href="{L["rec"]}" target="_blank" rel="noopener">לצפייה ב-YouTube</a></div>') if yid else ''
+    # rec: one link, or a list of links when the recording is in parts (Shay, 2026-11-19: lesson 3 came in two halves)
+    recs = L['rec'] if isinstance(L.get('rec'), list) else ([L['rec']] if L.get('rec') else [])
+    yid = recs[0].rstrip('/').split('/')[-1] if recs else ''
+    def one(url, i):
+        part = f', חלק {n(i + 1)} מתוך {n(len(recs))}' if len(recs) > 1 else ''
+        vid = url.rstrip('/').split('/')[-1]
+        return (f'<div class="rec" id="recording-{k}{"" if i == 0 else "-" + str(i + 1)}"><h4>🎥 הקלטת השיעור{part} · {n(L["date"])}</h4><div class="recbox">'
+                f'<iframe src="https://www.youtube.com/embed/{vid}" title="הקלטת שיעור {k}{part}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>'
+                f'<a class="yt" href="{url}" target="_blank" rel="noopener">לצפייה ב-YouTube</a></div>')
+    rec = ''.join(one(u, i) for i, u in enumerate(recs))
     if not yid and L.get('rec_soon'):
         # the meeting has a date but no recording yet: the frame is already in place
         rec = (f'<div class="rec" id="recording-{k}"><h4>🎥 הקלטת השיעור · {n(L["date"])}</h4><div class="recbox"><div class="recph"><div><div class="big">🎥</div>'
