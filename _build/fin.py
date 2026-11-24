@@ -99,10 +99,15 @@ def ABS(x): return abs(x)
 def POWER(a, b): return a ** b
 def SQRT(a): return math.sqrt(a)
 def IF(c, a, b=False): return a if c else b
+def DATE(y, m, d):
+    import datetime as _dt
+    return (_dt.date(int(y), int(m), int(d)) - _dt.date(1899, 12, 30)).days
+
+
 def SUMPRODUCT(*ls): return sum(math.prod(x if isinstance(x, (int, float)) else 0 for x in t) for t in zip(*ls))
 
 
-FUN = dict(PV=PV, FV=FV, PMT=PMT, NPER=NPER, RATE=RATE, NPV=NPV, IRR=IRR, ROUND=ROUND, SUM=SUM, AVERAGE=AVERAGE, MIN=MIN, MAX=MAX, ABS=ABS, POWER=POWER, SQRT=SQRT, IF=IF, SUMPRODUCT=SUMPRODUCT)
+FUN = dict(PV=PV, FV=FV, PMT=PMT, NPER=NPER, RATE=RATE, NPV=NPV, IRR=IRR, ROUND=ROUND, SUM=SUM, AVERAGE=AVERAGE, MIN=MIN, MAX=MAX, ABS=ABS, POWER=POWER, SQRT=SQRT, IF=IF, SUMPRODUCT=SUMPRODUCT, DATE=DATE)
 
 
 def to_py(f):
