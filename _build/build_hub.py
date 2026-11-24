@@ -6,7 +6,7 @@ H = os.path.dirname(os.path.abspath(__file__))
 n = lambda s: f'<span class="n">{s}</span>'
 UP = [(2, 'אג״ח לשיעורין, ומחיר לפי תאריכים, לפני ואחרי קופון'), (3, 'חילוץ תשואה לפדיון ותשואה לתקופת החזקה'), (4, 'מלווה קצר מועד (מק״מ), אג״ח צמיתה ומשמעות משך החיים הממוצע (מח״מ)'), (5, 'אג״ח צמודות למדד ולדולר'), (6, 'תמחור מניות: מודל הדיבידנדים, תשואת דיבידנד ומכפיל רווח'), (7, 'תמחור מניות: הזדמנויות צמיחה, מכפיל ענפי ודיבידנד רבעוני'), (8, 'מחיר ההון של החברה: ביטא ומחיר הון ממוצע משוקלל'), ('9 ו-10', 'מינוף פיננסי: מודיליאני ומילר, בלי מסים ועם מסים'), (11, 'חכירה לעומת רכישה')]
 UP = UP[1:]   # lesson 2 has its card
-UP = [(5, UP[1][1])] + [((n + 1) if isinstance(n, int) else '10 ו-11', t) for n, t in UP[2:]]   # lessons 3 and 4 have cards; duration in full opens lesson 5
+UP = [((n + 1) if isinstance(n, int) else '10 ו-11', t) for n, t in UP[2:]]   # lessons 3 to 5 have cards (5 is a draft); duration in full is in lesson 5
 ups = ''.join(f'<li><span class="un">{n(i if isinstance(i, int) else i.replace(" ו-", "-"))}</span><span>{t}</span><em>בקרוב</em></li>' for i, t in UP)
 # Shay, 2026-11-03: lesson 1 ended before amortizing bonds; they open lesson 2. Homework is cut from chapter 1 by what each lesson taught.
 LESSONS = [
@@ -24,9 +24,20 @@ LESSONS = [
       ),
  dict(k=4, date='24.11.2026', rec_soon=True, h='תרגילים מורכבים ותשואה לתקופת החזקה',
       learn=['תזכורת קצרה לשיעור 3', 'תרגילים מורכבים בסגנון בחינה: אג״ח לשיעורין שנקנית אחרי ההנפקה, ותשואה בין מועדים', 'מחיר מכירה בתשואה של יום המכירה',
-             'תשואה לתקופת החזקה (HPR): הנוסחה הכללית, מחיר המכירה מלוח התזרימים, והמרה לשנה', 'מח״מ בקצרה: המשמעות, בלי חישוב', 'תרגול עצמי: ארבע שאלות אמריקאיות עם גיליון ופתרון מלא, צעד אחר צעד'],
+             'תשואה לתקופת החזקה (HPR): הנוסחה הכללית, מחיר המכירה מלוח התזרימים, והמרה לשנה', 'עצרנו בסיכום הביניים של HPR, שקף 19. המח״מ עבר לשיעור 5',
+             'תרגול עצמי: שמונה שאלות אמריקאיות עם גיליון קטן ופתרון מלא, צעד אחר צעד'],
+      ),
+ # Shay, 2026-11-24: lesson 4 stopped at slide 19; what was left opens lesson 5, a draft until the meeting
+ dict(k=5, date='1.12.2026', draft=True, h='מח״מ, מק״מ ואג״ח צמיתה (טיוטה משוערת)',
+      learn=['טיוטה משוערת: המצגת תושלם לפני המפגש', 'מח״מ: המשמעות, מהנקודה שבה עצרנו בשיעור 4', 'מק״מ, מלווה קצר מועד', 'אג״ח צמיתה (קונסול)', 'מח״מ: החישוב, ורגישות המחיר לשינוי בריבית'],
       ),
 ]
+
+SUMG = '''<div class="grp"><h5>2. אחרי השיעור, לחזרה</h5><div class="links">
+<a class="lk s" href="lectures/lecture-{k}/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת במסמך אחד: הגדרות, השאלות והפתרון שלהן בגיליון, ומילון מושגים.</span></span></a>
+</div></div>'''
+APPX = '''<a class="lk x" href="materials/lesson-{k}-appendix.xlsx" download><span class="e">📊</span><span><b>אקסל תרגילי השיעור</b><span class="d">כל שאלות המצגת, לעבודה ב-Excel בלי המצגת. גיליון ״ללא פתרון״ עם תבנית לכל שאלה, וגיליון ״עם פתרון״.</span></span></a>
+'''
 
 
 def card(L):
@@ -34,6 +45,7 @@ def card(L):
     D = open(os.path.join(H, '..', 'lectures', f'lecture-{k}', 'presentation.html'), encoding='utf8').read()
     NS, NX = D.count('<section class="slide'), D.count('act xlq')
     learn = ''.join(f'<li>{x}</li>' for x in L['learn'])
+    SX = f', וגיליון Excel חי ליד כל שאלה ({n(NX)} גיליונות), עם בדיקה ומשוב' if NX else ''
     e = len(BK[k]['exams'])
     nums = re.sub(r'(\d+\.\d+)', lambda m: n(m.group(1)), BKSPAN(k))
     L['hw'] = f'פרק {n(k)} בקובץ התרגילים: תרגילים {nums}' + ('' if not e else (', ותרגיל אחד בסגנון בחינה' if e == 1 else f', ו-{n(e)} תרגילים בסגנון בחינה'))
@@ -48,7 +60,7 @@ def card(L):
                 f'<iframe src="https://www.youtube.com/embed/{vid}" title="הקלטת שיעור {k}{part}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>'
                 f'<a class="yt" href="{url}" target="_blank" rel="noopener">לצפייה ב-YouTube</a></div>')
     rec = ''.join(one(u, i) for i, u in enumerate(recs))
-    if not yid and L.get('rec_soon'):
+    if not yid and (L.get('rec_soon') or L.get('draft')):
         # the meeting has a date but no recording yet: the frame is already in place
         rec = (f'<div class="rec" id="recording-{k}"><h4>🎥 הקלטת השיעור · {n(L["date"])}</h4><div class="recbox"><div class="recph"><div><div class="big">🎥</div>'
                f'<b>ההקלטה תעודכן לאחר המפגש</b></div></div></div></div>')
@@ -60,12 +72,9 @@ def card(L):
 </ul>{rec}</div>
 <div><h4>חומרי השיעור</h4>
 <div class="grp"><h5>1. בשיעור</h5><div class="links">
-<a class="lk p" href="lectures/lecture-{k}/presentation.html"><span class="e">🖥️</span><span><b>מצגת השיעור</b><span class="d">המצגת שבה עובדים בשיעור: {n(NS)} שקפים, וגיליון Excel חי ליד כל שאלה ({n(NX)} גיליונות), עם בדיקה ומשוב.</span></span></a>
-<a class="lk x" href="materials/lesson-{k}-appendix.xlsx" download><span class="e">📊</span><span><b>אקסל תרגילי השיעור</b><span class="d">כל שאלות המצגת, לעבודה ב-Excel בלי המצגת. גיליון ״ללא פתרון״ עם תבנית לכל שאלה, וגיליון ״עם פתרון״.</span></span></a>
-</div></div>
-<div class="grp"><h5>2. אחרי השיעור, לחזרה</h5><div class="links">
-<a class="lk s" href="lectures/lecture-{k}/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת במסמך אחד: הגדרות, השאלות והפתרון שלהן בגיליון, ומילון מושגים.</span></span></a>
-</div></div>
+<a class="lk p" href="lectures/lecture-{k}/presentation.html"><span class="e">🖥️</span><span><b>מצגת השיעור{' (טיוטה)' if L.get('draft') else ''}</b><span class="d">{'טיוטה משוערת, תושלם לפני המפגש. ' if L.get('draft') else ''}המצגת שבה עובדים בשיעור: {n(NS)} שקפים{SX}.</span></span></a>
+{'' if L.get('draft') else APPX.format(k=k)}</div></div>
+{'' if L.get('draft') else SUMG.format(k=k)}
 <div class="grp"><h5>3. תרגילי בית</h5><div class="links">
 <a class="lk p" href="lectures/lecture-{k}/exercises-{k}.pdf" target="_blank" rel="noopener"><span class="e">📝</span><span><b>תרגילי הבית (PDF)</b><span class="d">{L['hw']}. רק התרגילים של השיעור הזה.</span></span></a>
 <a class="lk r" href="lectures/lecture-{k}/solutions-{k}.pdf" target="_blank" rel="noopener"><span class="e">✅</span><span><b>פתרונות תרגילי הבית (PDF)</b><span class="d">פרק {n(k)} בחוברת הפתרונות, באותו מספור, שלב אחר שלב. פותחים רק אחרי שפותרים.</span></span></a>

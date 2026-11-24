@@ -46,6 +46,7 @@ sup,sub{font-size:.68em;line-height:0}
 .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;margin:0 .6mm;font-size:.92em}
 .frac>span{padding:0 1.2mm;white-space:nowrap}
 .frac>span:first-child{border-bottom:.3mm solid currentColor}
+sup.sf{vertical-align:1.15em;font-size:.6em}sup.sf .frac{vertical-align:baseline;margin:0 .3mm;line-height:1.05}sup.sf .frac>span{padding:0 .6mm}
 .row{display:flex;gap:3mm}.row.eq2>*{flex:1 1 0;min-width:0}
 .col{display:block}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:2mm}

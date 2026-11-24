@@ -31,7 +31,7 @@ def M(s):
     while i < len(s):
         c = s[i]
         if c == '^' and s[i + 1:i + 2] == '{':
-            flush(); a, i = _braces(s, i + 1); out.append(f'<sup>{M(a)}</sup>')
+            flush(); a, i = _braces(s, i + 1); out.append(f'<sup class="sf">{M(a)}</sup>' if '\\f{' in a else f'<sup>{M(a)}</sup>')   # a fraction in an exponent is raised whole
         elif c == '_' and s[i + 1:i + 2] == '{':
             flush(); a, i = _braces(s, i + 1); out.append(f'<sub>{M(a)}</sub>')
         elif s.startswith('\\f{', i):

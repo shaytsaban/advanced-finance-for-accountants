@@ -429,3 +429,6 @@ p.reqh{margin:6px 0 2px!important}
 .qr .xl-tools.side{border:1px solid #c8c8c8;border-radius:10px;margin:8px 0;justify-content:flex-start}
 .fbox{font-size:20px;line-height:1.45;padding:14px 22px;margin-bottom:10px}
 .fbox .lg{font-size:19px;margin:2px 0 8px}
+
+.vtab{font-size:17px;margin-top:6px}.vtab td:first-child{white-space:nowrap;text-align:center}
+.m sup.sf,.eq sup.sf,sup.sf{vertical-align:1.15em;font-size:.6em}sup.sf .frac,.eq sup.sf .frac{vertical-align:baseline;margin:0 1px;line-height:1.1}sup.sf .frac>span{padding:0 3px}
