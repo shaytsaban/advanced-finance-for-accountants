@@ -28,12 +28,13 @@ LESSONS = [
              'תרגול עצמי: שמונה שאלות אמריקאיות עם גיליון קטן ופתרון מלא, צעד אחר צעד'],
       ),
  # Shay, 2026-11-24: lesson 4 stopped at slide 19; what was left opens lesson 5
- dict(k=5, date='1.12.2026', draft=True, h='מק״מ, אג״ח צמיתה ומח״מ (טיוטה)',
+ dict(k=5, date='1.12.2026', draft=True, h='מק״מ, אג״ח צמיתה ומח״מ',
       learn=['תזכורת קצרה לשיעור 4', 'מק״מ, מלווה קצר מועד: ספירת ימים לפדיון, תשואה שנתית ב-RATE ומחיר ב-PV', 'אג״ח צמיתה (קונסול): השווי הוא הקופון חלקי התשואה',
              'מח״מ על כל היבטיו: המשמעות, רגישות המחיר לשינוי בריבית, החישוב בטבלת תזרימים ומקרי הקצה', 'תרגול עצמי: שש שאלות אמריקאיות עם גיליון קטן ופתרון מלא, צעד אחר צעד'],
       ),
 ]
 
+DRAFT = ' <span class="draft">טיוטה</span>'   # Shay, 2026-11-24: a draft lesson says so beside its title and beside its meeting number
 SUMG = '''<div class="grp"><h5>2. אחרי השיעור, לחזרה</h5><div class="links">
 <a class="lk s" href="lectures/lecture-{k}/summary.pdf"><span class="e">📄</span><span><b>סיכום השיעור (PDF)</b><span class="d">כל תוכן המצגת במסמך אחד: הגדרות, השאלות והפתרון שלהן בגיליון, ומילון מושגים.</span></span></a>
 </div></div>'''
@@ -66,7 +67,7 @@ def card(L):
         rec = (f'<div class="rec" id="recording-{k}"><h4>🎥 הקלטת השיעור · {n(L["date"])}</h4><div class="recbox"><div class="recph"><div><div class="big">🎥</div>'
                f'<b>ההקלטה תעודכן לאחר המפגש</b></div></div></div></div>')
     return f'''<article class="lec" id="lesson-{k}">
-<div class="lec-head"><div class="lec-n">{k}</div><div><h3>{L['h']}</h3><div class="sub">מפגש {n(k)}{(' · ' + n(L['date'])) if L.get('date') else ''}</div></div></div>
+<div class="lec-head"><div class="lec-n">{k}</div><div><h3>{L['h']}{DRAFT if L.get('draft') else ''}</h3><div class="sub">מפגש {n(k)}{(' · ' + n(L['date'])) if L.get('date') else ''}{DRAFT if L.get('draft') else ''}</div></div></div>
 <div class="lec-body">
 <div><h4>מה לומדים בשיעור</h4><ul class="learn">
 {learn}
@@ -96,6 +97,7 @@ cards = ''.join(card(L) for L in LESSONS)
 src = open(os.path.join(H, '..', '..', 'finance-for-managers', 'index.html'), encoding='utf8').read()
 css = re.search(r'<style>(.*?)</style>', src, re.S).group(1)
 css += '''
+.draft{display:inline-block;vertical-align:middle;margin-inline-start:10px;background:#ff6a4d;color:#fff;font-size:.62em;font-weight:800;padding:2px 12px;border-radius:99px;line-height:1.5}
 .rec{margin-top:18px}
 .rec h4{font-size:18px;margin-bottom:10px;color:var(--navy2)}
 .recbox{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#0c1426;box-shadow:0 10px 26px rgba(22,33,58,.18);border:3px solid var(--navy2)}
