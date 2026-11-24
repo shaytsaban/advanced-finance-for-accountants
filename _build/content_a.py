@@ -24,9 +24,9 @@ LMETA = {
          cover='שווי מיד אחרי תשלום ורגע לפניו, אג״ח שנסחרת בין מועדי תשלום, חילוץ תשואה לפדיון בפונקציות IRR ו-RATE, חילוץ תשואה בין מועדי תשלום בעזרת שורות אפס, והמרת תשואה לתקופה לתשואה שנתית.',
          next_h='תשואה לתקופת החזקה', next_t='תשואה לתקופת החזקה (HPR) ותקופות חלקיות. לפני המפגש: תרגילי הבית של שיעור 3, פרק 3 בקובץ התרגילים.'),
  4: dict(date='24.11.2026', h1=('אג״ח:', 'תרגילים מורכבים ותשואה לתקופת החזקה'), title='תרגילים מורכבים ותשואה לתקופת החזקה',
-         sub='תרגילים מורכבים בסגנון בחינה על כל מה שלמדנו, ואז הנושא החדש: כמה הרוויח מי שמכר את האג״ח לפני הפדיון. ובסוף, בקצרה, מח״מ.', chip='תזכורת לשיעור 3, ושבע שאלות על לוח תזרימים מלא',
-         cover='אג״ח לשיעורין שנקנית אחרי ההנפקה, תשואה בין מועדים בשורות אפס, מחיר מכירה בתשואה של יום המכירה, תשואה לתקופת החזקה (HPR) והמרתה לשנה, ומח״מ בקצרה.',
-         next_h='מח״מ', next_t='מח״מ (משך חיים ממוצע) ורגישות מחיר האג״ח לשינוי בתשואה. לפני המפגש: תרגילי הבית של שיעור 4, פרק 4 בקובץ התרגילים.')}[LESSON]
+         sub='תרגילים מורכבים בסגנון בחינה על כל מה שלמדנו, ואז הנושא החדש: כמה הרוויח מי שמכר את האג״ח לפני הפדיון. ובסוף, בקצרה, מח״מ.', chip='תזכורת לשיעור 3, שש שאלות וארבעה תרגילים אמריקאיים על לוח תזרימים מלא',
+         cover='אג״ח לשיעורין שנקנית אחרי ההנפקה, תשואה בין מועדים בשורות אפס, מחיר מכירה בתשואה של יום המכירה, תשואה לתקופת החזקה (HPR) והמרתה לשנה, ומשמעות המח״מ.',
+         next_h='מק״מ, אג״ח צמיתה (קונסול) והעמקה במח״מ', next_t='אג״ח קצרות: מק״מ, מלווה קצר מועד. אג״ח אינסופיות: אג״ח צמיתה (קונסול). והעמקה במח״מ: החישוב, והרגישות של מחיר האג״ח לשינוי בריבית. לפני המפגש: תרגילי הבית של שיעור 4, פרק 4 בקובץ התרגילים.')}[LESSON]
 XSPECS = []        # every live sheet, in deck order: the practice workbooks are built from these
 SL = []            # every slide, in order
 CUR = [None]       # current part number
@@ -403,7 +403,8 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
         cfgd['chart'] = chart
         sv = f'<svg class="xlc" viewBox="0 0 {chart.get("W", 470)} {chart.get("H", 330)}" role="img" aria-label="תרשים"></svg>'
     if side:
-        return cfgd, f'<div class="tasktxt sm">{TX(task)}</div><div class="sheet"></div>{extra}'
+        # Shay, 2026-11-24: no instruction box above a sheet that sits beside its question; the sheet gets the height
+        return cfgd, f'<div class="sheet"></div>{extra}'
     return cfgd, f'<div class="tasktxt">{TX(task)}</div><div class="xlrow{"" if chart else " solo"}"><div class="sheet"></div><div class="xlside">{sv}</div></div>{extra}'
 
 

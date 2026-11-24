@@ -46,7 +46,7 @@ def M(s):
 
 
 # a number, with its minus sign when it has one, so the minus stays on the left inside the LTR run
-NUM = re.compile(r'(?:(?<![^\s(>])[−-]|(?<![\w.,/]))(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?%?|\d+(?:\.\d+)*%?)')
+NUM = re.compile(r'(?:(?<![^\s(>])[−-]|(?<![\w.,/]))(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?%?|\d+(?:\.\d+)*(?:/\d+(?:\.\d+)?)?%?)')   # Shay, 2026-11-24: a fraction such as 4/3 is one LTR piece, or it reads 3/4
 
 
 def _textnum(seg):

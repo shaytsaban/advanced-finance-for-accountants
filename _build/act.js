@@ -51,7 +51,7 @@ $$('.xlq').forEach(b=>{const cfg=cfg0(b),host=$('.sheet',b),svg=$('svg.xlc',b);l
    if(pts.length&&!single){const [x,y]=pts[pts.length-1];p+=f.tx(f.X(x)-8,f.Y(y)+(se.dy||-10),se.lab,{a:'end',fill:se.c,w:800,fs:17});}});
   if(single&&c.series[0].lab)p+=f.tx(f.W-f.mr-4,f.mt+16,c.series[0].lab,{a:'end',fill:c.series[0].c,w:800,fs:16});
   svg.innerHTML=p;};
- cfg.onChange=draw;cfg.onFb=()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);};api=XL.mount(host,cfg);host.__api=api;{const rb=$('.recapbtn',b);if(rb)rb.addEventListener('click',()=>api.recapFill());}const fbx=$('.xl-fb',host);/* beside a question, the explanation of each step and the feedback sit in the question column, next to the sheet */if(fbx){const q=b.classList.contains('qx')&&!$('.qr svg.xlc',b)&&!$('.qr .recapbox',b)&&$('.qr',b);/* a question column that already holds a chart keeps the feedback under the sheet */if(q){const d=document.createElement('div');d.className='xfbs';q.appendChild(d);d.appendChild(fbx);}else($('.xfb',b)||$('.xlside',b)).appendChild(fbx);}draw();
+ cfg.onChange=draw;cfg.onFb=()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);};api=XL.mount(host,cfg);host.__api=api;/* Shay, 2026-11-24: beside a question, the sheet's buttons sit in the question column, and the sheet gets the height */if(b.classList.contains('qx')){const tl=$('.xl-tools',b),qr=$('.qr',b);if(tl&&qr){tl.__home=[tl.parentElement,tl.nextSibling];tl.classList.add('side');qr.insertBefore(tl,qr.children[1]||null);}}{const rb=$('.recapbtn',b);if(rb)rb.addEventListener('click',()=>api.recapFill());}const fbx=$('.xl-fb',host);/* beside a question, the explanation of each step and the feedback sit in the question column, next to the sheet */if(fbx){const q=b.classList.contains('qx')&&!$('.qr svg.xlc',b)&&!$('.qr .recapbox',b)&&$('.qr',b);/* a question column that already holds a chart keeps the feedback under the sheet */if(q){const d=document.createElement('div');d.className='xfbs';q.appendChild(d);d.appendChild(fbx);}else($('.xfb',b)||$('.xlside',b)).appendChild(fbx);}draw();
  /* when feedback appears under a sheet, the sheet gives it room on the slide */
  if(fbx&&$('.xfb',b)){let t=null;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>{const sl=b.closest('.slide');if(sl&&sl.classList.contains('on')&&window.__fitSheets)window.__fitSheets(sl);},0);}).observe(fbx,{childList:true,subtree:true,characterData:true});}});
 
@@ -87,6 +87,8 @@ $$('.draw').forEach(b=>{const C=cfg(b),svg=$('svg',b),fb=$('.fbbar',b),tt=$('.ta
 
 /* ---------- each sheet uses the free height of its slide: the scroll area reaches the bottom of the slide ---------- */
 window.__fitSheets=function(slide){const st=document.getElementById('stage'),sr=st.getBoundingClientRect(),k=sr.width/1280||1,limit=(slide.querySelector('.ft')?720-40-6:706);
+ /* the buttons go back above the sheet when the question column has no room for them */
+ slide.querySelectorAll('.qr .xl-tools.side').forEach(tl=>{const qr=tl.parentElement,bot=Math.max(...[...qr.children].filter(c=>c.offsetParent&&!(c.classList.contains('st')&&!c.classList.contains('show'))).map(c=>c.getBoundingClientRect().bottom));if((bot-sr.top)/k>limit-4&&tl.__home){tl.classList.remove('side');tl.__home[0].insertBefore(tl,tl.__home[1]);}});
  slide.querySelectorAll('.xl-wrap').forEach(w=>{
   /* columns widen to the width of the sheet's area (the row-number column stays) */
   const tb=w.querySelector('table'),ths=[...tb.tHead.rows[0].cells].slice(1);ths.forEach(th=>{if(!th.dataset.w0)th.dataset.w0=parseFloat(th.style.width)||92;th.style.width=th.dataset.w0+'px';});
@@ -96,3 +98,8 @@ window.__fitSheets=function(slide){const st=document.getElementById('stage'),sr=
  /* the explanations beside the sheet use the height left in the question column, and scroll inside it */
  slide.querySelectorAll('.qr .xfbs .xl-fb').forEach(f=>{f.style.maxHeight='none';const t=(f.getBoundingClientRect().top-sr.top)/k;f.style.maxHeight=Math.max(40,Math.floor(limit-t-6))+'px';});};
 })();
+
+/* the first slide shown, from a link with #id: fit its sheets once the page has laid out */
+addEventListener('load',()=>setTimeout(()=>{const s=document.querySelector('.slide.on');if(s&&window.__fitSheets)window.__fitSheets(s);},60));
+/* a multiple choice answer beside a sheet opens its explanation: fit the slide again */
+document.addEventListener('click',e=>{if(!e.target.closest('.qx .mc'))return;const f=()=>{const s=e.target.closest('.slide');if(s&&window.__fitSheets)window.__fitSheets(s);};f();setTimeout(f,30);});

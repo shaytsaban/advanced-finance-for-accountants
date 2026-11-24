@@ -14,7 +14,9 @@ const rel=e=>{const s=stage.getBoundingClientRect(),r=e.getBoundingClientRect(),
 function solveWidgets(s){
  s.querySelectorAll('.numq').forEach(b=>{b.querySelector('input').value=b.dataset.a;b.querySelector('.chk').click();});
  s.querySelectorAll('.srow').forEach(r=>{r.querySelectorAll('.so')[+r.dataset.a].click();});
- s.querySelectorAll('.mc').forEach(m=>{m.classList.add('done');m.querySelectorAll('.o')[+m.dataset.a].classList.add('ok');});}
+ s.querySelectorAll('.mc').forEach(m=>{m.classList.add('done');m.querySelectorAll('.o')[+m.dataset.a].classList.add('ok');});
+ /* a real click on an answer fits the slide again (act.js); setting the classes here does not, so fit as the click would */
+ if(s.querySelector('.qx .mc.done')&&window.__fitSheets)window.__fitSheets(s);}
 function measure(s,i,tag){const foot=s.querySelector('.ft');const limit=foot?720-36:716;let worst=0,who='',wl=0,wr=1280;
  s.querySelectorAll('*').forEach(e=>{const xw=e.closest('.xl-wrap,.xfbs .xl-fb');if(xw&&xw!==e)return;/* a box that scrolls inside itself: only the box counts */if(e.closest('.ft')||e.closest('.pd-num')||e.closest('.orb')||e.closest('svg')&&e.tagName!=='svg')return;const c=getComputedStyle(e);if(c.display==='none'||c.visibility==='hidden')return;const r=rel(e);if(r.b-r.t<1)return;if(r.b>worst){worst=r.b;who=e.tagName+'.'+(e.className.baseVal??e.className);}if(r.l<wl)wl=r.l;if(r.r>wr)wr=r.r;});
  if(worst>limit+.5||wl<-.5||wr>1280.5)R.overflow.push({i:i+1,id:s.id,tag,bottom:Math.round(worst),limit,who,l:Math.round(wl),r:Math.round(wr)});}
