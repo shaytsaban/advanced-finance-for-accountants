@@ -7,7 +7,7 @@ COURSE = 'מימון מתקדם לחשבונאים'
 INST = 'המכללה למנהל · מסלול חשבונאות'
 SEM = 'סמסטר א׳ תשפ״ז'
 LESSON = globals().get('LESSON', 1)
-TOTAL_PARTS = {1: 4, 2: 4, 3: 6}[LESSON]
+TOTAL_PARTS = {1: 4, 2: 4, 3: 6, 4: 5}[LESSON]
 # per lesson: deck title, subtitle, chips, cover line and the next meeting. The first meeting date is not in the source files.
 # Shay, 2026-11-03: lesson 1 ended before amortizing bonds. From that slide on, the content is lesson 2.
 LMETA = {
@@ -22,7 +22,11 @@ LMETA = {
  3: dict(date='17.11.2026', h1=('אג״ח:', 'שווי לפני תשלום, מסחר בין מועדים וחילוץ תשואה'), title='לפני תשלום, בין מועדים וחילוץ תשואה',
          sub='ממשיכים מהנקודה שבה עצרנו בשיעור 2: שווי רגע לפני תשלום, אג״ח שנקנית בין שני מועדי תשלום, והשאלה ההפוכה: המחיר ידוע, ומחפשים את התשואה, גם בין מועדים.', chip='תזכורת לשיעור 2, ועשר שאלות על לוח תזרימים מלא',
          cover='שווי מיד אחרי תשלום ורגע לפניו, אג״ח שנסחרת בין מועדי תשלום, חילוץ תשואה לפדיון בפונקציות IRR ו-RATE, חילוץ תשואה בין מועדי תשלום בעזרת שורות אפס, והמרת תשואה לתקופה לתשואה שנתית.',
-         next_h='תשואה לתקופת החזקה', next_t='תשואה לתקופת החזקה (HPR) ותקופות חלקיות. לפני המפגש: תרגילי הבית של שיעור 3, פרק 3 בקובץ התרגילים.')}[LESSON]
+         next_h='תשואה לתקופת החזקה', next_t='תשואה לתקופת החזקה (HPR) ותקופות חלקיות. לפני המפגש: תרגילי הבית של שיעור 3, פרק 3 בקובץ התרגילים.'),
+ 4: dict(date='24.11.2026', h1=('אג״ח:', 'תרגילים מורכבים ותשואה לתקופת החזקה'), title='תרגילים מורכבים ותשואה לתקופת החזקה',
+         sub='תרגילים מורכבים בסגנון בחינה על כל מה שלמדנו, ואז הנושא החדש: כמה הרוויח מי שמכר את האג״ח לפני הפדיון. ובסוף, בקצרה, מח״מ.', chip='תזכורת לשיעור 3, ושבע שאלות על לוח תזרימים מלא',
+         cover='אג״ח לשיעורין שנקנית אחרי ההנפקה, תשואה בין מועדים בשורות אפס, מחיר מכירה בתשואה של יום המכירה, תשואה לתקופת החזקה (HPR) והמרתה לשנה, ומח״מ בקצרה.',
+         next_h='מח״מ', next_t='מח״מ (משך חיים ממוצע) ורגישות מחיר האג״ח לשינוי בתשואה. לפני המפגש: תרגילי הבית של שיעור 4, פרק 4 בקובץ התרגילים.')}[LESSON]
 XSPECS = []        # every live sheet, in deck order: the practice workbooks are built from these
 SL = []            # every slide, in order
 CUR = [None]       # current part number
@@ -323,12 +327,13 @@ def _xsheet(sid, task, data, sol, widths, head, rows=None, cols=None, hints=None
         if a in inputs:
             r = inputs[a]; back = float(r[:-1]) / 100 if r.endswith('%') else float(r)
             assert abs(back - v) <= 1e-12 * max(1, abs(v)), (sid, a, v, r)
+    _orig = dict(data)
     data = {a: v for a, v in data.items() if a not in inputs and a not in given_f}
     sol = {**inputs, **given_f, **sol}
     data = _argnames(dict(data), sol, head)
     n_user = len(steps or [])
     if not steps:
-        steps = _auto_steps(data, {a: v for a, v in sol.items() if a not in inputs and a not in given_f}, head, fmt)
+        steps = _auto_steps({**data, **{a: _orig[a] for a in inputs if a in _orig}}, {a: v for a, v in sol.items() if a not in inputs and a not in given_f}, head, fmt)
     if steps:
         steps = ([dict(cells=dict(inputs), note='מזינים את נתוני השאלה בתאים, כפי שהם כתובים בשאלה. אחוזים כותבים עם סימן האחוז.', sel=next(iter(inputs)))] if inputs else []) + \
                 ([dict(cells=dict(given_f), note='התאמות לתקופה: ' + ' '.join(f'{a}: {f}' for a, f in given_f.items()))] if given_f else []) + steps
@@ -515,5 +520,5 @@ def RL(items, start=1):
 
 
 exec(R('content_g.py'))
-for _f in {1: ['content_l1a.py', 'content_l1b.py', 'content_l1c.py'], 2: ['content_l2a.py', 'content_l2b.py', 'content_l2c.py'], 3: ['content_l3a.py', 'content_l3b.py', 'content_l3c.py', 'content_l3e.py', 'content_l3d.py']}[LESSON]:
+for _f in {1: ['content_l1a.py', 'content_l1b.py', 'content_l1c.py'], 2: ['content_l2a.py', 'content_l2b.py', 'content_l2c.py'], 3: ['content_l3a.py', 'content_l3b.py', 'content_l3c.py', 'content_l3e.py', 'content_l3d.py'], 4: ['content_l4a.py', 'content_l4b.py', 'content_l4c.py']}[LESSON]:
     exec(R(_f))

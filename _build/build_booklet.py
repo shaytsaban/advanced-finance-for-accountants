@@ -15,7 +15,7 @@ CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 FONTS = os.path.join(ROOT, '..', 'iit-build', 'fonts')
 FB, FR = os.path.join(FONTS, 'davidbd.ttf'), os.path.join(FONTS, 'david.ttf')
 FONT = {True: fitz.Font(fontfile=FB), False: fitz.Font(fontfile=FR)}
-LESSON_FILES = [1, 2, 3]        # lessons that have a card on the site
+LESSON_FILES = [1, 2, 3, 4]        # lessons that have a card on the site
 TOP, BOT = 72, 772              # the body of a page, between the running header and the page number
 OLD = sorted({int(k[0]) for k in NEW})   # chapters of the original that are cut into pieces
 HEB = re.compile(r'[֐-׿]')
