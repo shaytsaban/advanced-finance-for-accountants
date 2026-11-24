@@ -28,9 +28,9 @@ LESSONS = [
              'תרגול עצמי: שמונה שאלות אמריקאיות עם גיליון קטן ופתרון מלא, צעד אחר צעד'],
       ),
  # Shay, 2026-11-24: lesson 4 stopped at slide 19; what was left opens lesson 5
- dict(k=5, date='1.12.2026', rec_soon=True, h='מח״מ, מק״מ ואג״ח צמיתה',
-      learn=['תזכורת קצרה לשיעור 4, ומשמעות המח״מ: הנקודה שבה עצרנו', 'מק״מ, מלווה קצר מועד: ספירת ימים לפדיון, תשואה שנתית ב-RATE ומחיר ב-PV', 'אג״ח צמיתה (קונסול): השווי הוא הקופון חלקי התשואה',
-             'מח״מ: החישוב בטבלת תזרימים, ורגישות המחיר לשינוי בריבית', 'תרגול עצמי: שש שאלות אמריקאיות עם גיליון קטן ופתרון מלא, צעד אחר צעד'],
+ dict(k=5, date='1.12.2026', draft=True, h='מק״מ, אג״ח צמיתה ומח״מ (טיוטה)',
+      learn=['תזכורת קצרה לשיעור 4', 'מק״מ, מלווה קצר מועד: ספירת ימים לפדיון, תשואה שנתית ב-RATE ומחיר ב-PV', 'אג״ח צמיתה (קונסול): השווי הוא הקופון חלקי התשואה',
+             'מח״מ על כל היבטיו: המשמעות, רגישות המחיר לשינוי בריבית, החישוב בטבלת תזרימים ומקרי הקצה', 'תרגול עצמי: שש שאלות אמריקאיות עם גיליון קטן ופתרון מלא, צעד אחר צעד'],
       ),
 ]
 
@@ -73,9 +73,9 @@ def card(L):
 </ul>{rec}</div>
 <div><h4>חומרי השיעור</h4>
 <div class="grp"><h5>1. בשיעור</h5><div class="links">
-<a class="lk p" href="lectures/lecture-{k}/presentation.html"><span class="e">🖥️</span><span><b>מצגת השיעור{' (טיוטה)' if L.get('draft') else ''}</b><span class="d">{'טיוטה משוערת, תושלם לפני המפגש. ' if L.get('draft') else ''}המצגת שבה עובדים בשיעור: {n(NS)} שקפים{SX}.</span></span></a>
-{'' if L.get('draft') else APPX.format(k=k)}</div></div>
-{'' if L.get('draft') else SUMG.format(k=k)}
+<a class="lk p" href="lectures/lecture-{k}/presentation.html"><span class="e">🖥️</span><span><b>מצגת השיעור{' (טיוטה)' if L.get('draft') else ''}</b><span class="d">{'טיוטה: תעודכן לפי ההספק במפגש. ' if L.get('draft') else ''}המצגת שבה עובדים בשיעור: {n(NS)} שקפים{SX}.</span></span></a>
+{APPX.format(k=k)}</div></div>
+{SUMG.format(k=k)}
 <div class="grp"><h5>3. תרגילי בית</h5><div class="links">
 <a class="lk p" href="lectures/lecture-{k}/exercises-{k}.pdf" target="_blank" rel="noopener"><span class="e">📝</span><span><b>תרגילי הבית (PDF)</b><span class="d">{L['hw']}. רק התרגילים של השיעור הזה.</span></span></a>
 <a class="lk r" href="lectures/lecture-{k}/solutions-{k}.pdf" target="_blank" rel="noopener"><span class="e">✅</span><span><b>פתרונות תרגילי הבית (PDF)</b><span class="d">פרק {n(k)} בחוברת הפתרונות, באותו מספור, שלב אחר שלב. פותחים רק אחרי שפותרים.</span></span></a>

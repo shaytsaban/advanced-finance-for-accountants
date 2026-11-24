@@ -7,7 +7,7 @@ MODE = 'deck'
 LESSON = int(sys.argv[1]) if len(sys.argv) > 1 else 1
 exec(R('content_a.py'))
 
-HEAD = f'{COURSE} · מפגש {LESSON}' + (f' · {LMETA["date"]}' if LMETA['date'] else '') + (' · טיוטה משוערת' if LMETA.get('draft') else '')
+HEAD = f'{COURSE} · מפגש {LESSON}' + (f' · {LMETA["date"]}' if LMETA['date'] else '') + (' · טיוטה' if LMETA.get('draft') else '')
 
 
 def render(s, total):
